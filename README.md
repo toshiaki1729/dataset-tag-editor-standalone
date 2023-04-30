@@ -25,7 +25,7 @@ Caption in the filenames of images can be loaded, but edited captions can only b
 ## Requirements
 All requirements are listed in `requirements.txt`  
 [Python](https://www.python.org/) >= 3.9 (Developed on 3.10.11)  
-[PyTorch](https://pytorch.org/) (1.13.1+cu117)
+[PyTorch](https://pytorch.org/) with CUDA
 
 If you want to use DirectML, please install manually in venv (**not tested**).
 

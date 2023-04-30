@@ -27,7 +27,7 @@ DeepBooru interrogator で生成したような、カンマ区切り形式のキ
 ## Requirements
 必須事項は `requirements.txt` に全て記載されています。  
 [Python](https://www.python.org/) >= 3.9 (3.10.11で開発しています)  
-[PyTorch](https://pytorch.org/) (1.13.1+cu117)
+[PyTorch](https://pytorch.org/) with CUDA
 
 DirectMLを使用する際は、venvに手動でインストールしてください。ただし私toshiaki1729の環境ではテストができない為、動作の保証はできません。
 
