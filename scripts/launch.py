@@ -192,7 +192,9 @@ def commit_hash():
         return stored_commit_hash
 
     try:
-        stored_commit_hash = run(f"{git} rev-parse HEAD").strip()
+        command = f'cd "{utilities.base_dir()}" & {git} rev-parse HEAD'
+        result = run(command)
+        stored_commit_hash = result.stdout.decode('utf-8').strip()
     except Exception:
         stored_commit_hash = "<none>"
 
