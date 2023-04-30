@@ -1,0 +1,7 @@
+gradio==3.22.1
+transformers>=4.27.4
+requests
+pillow
+numpy
+torch==1.13.1+cu117
+torchvision==0.14.1+cu117

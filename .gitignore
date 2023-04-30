@@ -1,0 +1,8 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+.vscode/
+venv/
+temp/
+
+config.json
+settings.json
