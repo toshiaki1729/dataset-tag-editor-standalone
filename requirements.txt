@@ -3,5 +3,5 @@ transformers>=4.27.4
 requests
 pillow
 numpy
-torch
+torch>=1.10.0
 torchvision
