@@ -26,8 +26,10 @@ DeepBooru interrogator で生成したような、カンマ区切り形式のキ
 
 ## Requirements
 必須事項は `requirements.txt` に全て記載されています。  
+
+**以下をはじめにインストールしてください。**
 [Python](https://www.python.org/) >= 3.9 (3.10.11で開発しています)  
-[PyTorch](https://pytorch.org/) with CUDA
+[PyTorch](https://pytorch.org/) with CUDA  
 PyTorchのバージョンは[transformers](https://github.com/huggingface/transformers)に依存しています。手動で特定のバージョンをインストールする場合は [transformersのインストールの説明](https://github.com/huggingface/transformers#installation)に従ってください。
 
 DirectMLを使用する際は、venvに手動でインストールしてください。ただし私toshiaki1729の環境ではテストができない為、動作の保証はできません。
