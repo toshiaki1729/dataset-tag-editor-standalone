@@ -32,7 +32,7 @@ DeepBooru interrogator で生成したような、カンマ区切り形式のキ
 - [PyTorch](https://pytorch.org/) with CUDA >= 1.10.0 ([TorchDeepDanbooru](https://github.com/AUTOMATIC1111/TorchDeepDanbooru)が使用する[onnx-pytorch](https://github.com/fumihwh/onnx-pytorch)の要件)  
 PyTorchのバージョンは[transformers](https://github.com/huggingface/transformers)に依存しています。手動で特定のバージョンをインストールする場合は [transformersのインストールの説明](https://github.com/huggingface/transformers#installation)に従ってください。
 
-DirectMLを使用する際は、venvに手動でインストールしてください。ただし私toshiaki1729の環境ではテストができない為、動作の保証はできません。
+DirectMLを使用する際は、venvに手動でインストールしてください ([pytorch-directml](https://pypi.org/project/pytorch-directml/)をインストールすると有効化されます)。ただし私toshiaki1729の環境ではテストができない為、動作の保証はできません。
 
 
 ## インストール方法
