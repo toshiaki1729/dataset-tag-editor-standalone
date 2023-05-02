@@ -22,7 +22,7 @@ class DepDanbooruTagger:
         self.model = deepbooru_model.DeepDanbooruModel()
         self.model.load_state_dict(torch.load(file, map_location="cpu"))
         self.model.eval()
-        self.model.to(devices.cpu, torch.float16)
+        self.model.to(devices.device, torch.float16)
 
     def unload(self):
         if not settings.current.interrogator_keep_in_memory:
@@ -33,9 +33,9 @@ class DepDanbooruTagger:
         if not self.model:
             return []
         image = utilities.resize_and_fill(image.convert("RGB"), (512, 512))
-        image_np = np.array(image, dtype=np.float32)
-        with torch.no_grad(), devices.autocast():
-            x = torch.from_numpy(image_np).to(devices.device)
+        image_np = np.expand_dims(np.array(image, dtype=np.float32), 0) / 255
+        with torch.no_grad(), torch.autocast('cuda'):
+            x = torch.from_numpy(image_np).half().to(devices.device)
             y = self.model(x)[0].detach().cpu().numpy()
         
         return list(zip(self.model.tags, y))
