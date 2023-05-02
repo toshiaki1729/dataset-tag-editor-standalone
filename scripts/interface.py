@@ -1,9 +1,13 @@
+from collections import namedtuple
 import mimetypes
 import os
 from pathlib import Path
 import signal
 import sys
 import time
+import tempfile
+
+from PIL import PngImagePlugin, Image
 
 import gradio as gr
 import gradio.routes
@@ -21,10 +25,58 @@ from shared_state import state
 mimetypes.init()
 mimetypes.add_type("application/javascript", ".js")
 
+Savedfile = namedtuple("Savedfile", ["name"])
 GradioTemplateResponseOriginal = gradio.routes.templates.TemplateResponse
 git = "git"
 stored_commit_hash = None
 interface = None
+
+
+def cleanup_tmpdr():
+    if not state.temp_dir or not state.temp_dir.is_dir():
+        return
+
+    for p in state.temp_dir.glob("**/*.png"):
+        if p.is_file():
+            os.remove(p)
+
+
+def register_tmp_file(gradio: gr.Blocks, filename):
+    if hasattr(gradio, "temp_file_sets"):  # gradio >=3.15
+        gradio.temp_file_sets[0] = gradio.temp_file_sets[0] | {
+            os.path.abspath(filename)
+        }
+
+
+def save_pil_to_file(pil_image: Image.Image):
+    already_saved_as = getattr(pil_image, "already_saved_as", None)
+    if already_saved_as and os.path.isfile(already_saved_as):
+        register_tmp_file(interface, already_saved_as)
+
+        file_obj = Savedfile(already_saved_as)
+        return file_obj
+
+    tmpdir = state.temp_dir
+    use_metadata = False
+    metadata = PngImagePlugin.PngInfo()
+    for key, value in pil_image.info.items():
+        if isinstance(key, str) and isinstance(value, str):
+            metadata.add_text(key, value)
+            use_metadata = True
+
+    if tmpdir:
+        if not tmpdir.is_dir():
+            tmpdir.mkdir(parents=True)
+        file_obj = tempfile.NamedTemporaryFile(delete=False, suffix=".png", dir=tmpdir)
+    else:
+        file_obj = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
+    pil_image.save(file_obj, pnginfo=(metadata if use_metadata else None))
+    return file_obj
+
+
+# override save to file function so that it also writes PNG info
+gr.processing_utils.save_pil_to_file = save_pil_to_file
+
 
 def webpath(fn: Path):
     path = str(fn.absolute()).replace("\\", "/")
@@ -66,6 +118,8 @@ def reload_javascript():
         return res
 
     gradio.routes.templates.TemplateResponse = template_response
+
+
 def commit_hash():
     global stored_commit_hash
 
@@ -128,7 +182,9 @@ def wait_on_server():
                 time.sleep(0.25)
             break
 
+
 # ================================================================
+
 
 def main():
     global interface
@@ -149,7 +205,7 @@ def main():
             state.temp_dir = Path(settings.current.temp_directory)
 
         if settings.current.cleanup_tmpdir:
-            launch.cleanup_tmpdr()
+            cleanup_tmpdr()
 
         interface = create_ui().queue(64)
 
