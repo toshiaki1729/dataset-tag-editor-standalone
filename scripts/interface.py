@@ -201,9 +201,6 @@ def main():
         settings.load()
         paths.initialize()
 
-        print(paths.setting_model_path)
-        print(paths.models_path)
-
         state.temp_dir = (utilities.base_dir_path() / "temp").absolute()
         if settings.current.use_temp_files and settings.current.temp_directory != "":
             state.temp_dir = Path(settings.current.temp_directory)
