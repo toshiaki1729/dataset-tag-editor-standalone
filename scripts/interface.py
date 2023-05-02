@@ -14,7 +14,7 @@ import gradio.routes
 import gradio.utils
 
 
-import tab_main, tab_settings, cmd_args, settings, utilities, logger, launch
+import tab_main, tab_settings, cmd_args, settings, utilities, logger, launch, paths
 from shared_state import state
 
 
@@ -199,6 +199,10 @@ def main():
         state.begin()
 
         settings.load()
+        paths.initialize()
+
+        print(paths.setting_model_path)
+        print(paths.models_path)
 
         state.temp_dir = (utilities.base_dir_path() / "temp").absolute()
         if settings.current.use_temp_files and settings.current.temp_directory != "":

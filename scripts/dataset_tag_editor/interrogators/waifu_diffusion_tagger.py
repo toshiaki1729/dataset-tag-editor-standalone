@@ -4,7 +4,7 @@ from typing import Tuple
 
 import settings
 import devices as devices
-import launch, utilities
+import launch, utilities, paths
 
 
 class WaifuDiffusionTagger:
@@ -22,7 +22,7 @@ class WaifuDiffusionTagger:
 
         if not self.model:
             path_model = huggingface_hub.hf_hub_download(
-                self.MODEL_REPO, self.MODEL_FILENAME
+                self.MODEL_REPO, self.MODEL_FILENAME, cache_dir=paths.setting_model_path
             )
             if settings.current.interrogator_use_cpu:
                 providers = ["CPUExecutionProvider"]

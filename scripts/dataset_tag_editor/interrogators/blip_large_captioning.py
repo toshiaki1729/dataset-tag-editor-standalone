@@ -1,6 +1,6 @@
 from transformers import BlipProcessor, BlipForConditionalGeneration
 
-import devices, settings
+import devices, settings, paths
 
 
 class BLIPLargeCaptioning:
@@ -12,10 +12,12 @@ class BLIPLargeCaptioning:
 
     def load(self):
         if self.model is None or self.processor is None:
-            self.processor = BlipProcessor.from_pretrained(self.MODEL_REPO)
-            self.model = BlipForConditionalGeneration.from_pretrained(self.MODEL_REPO).to(
-                devices.device
+            self.processor = BlipProcessor.from_pretrained(
+                self.MODEL_REPO, cache_dir=paths.setting_model_path
             )
+            self.model = BlipForConditionalGeneration.from_pretrained(
+                self.MODEL_REPO, cache_dir=paths.setting_model_path
+            ).to(devices.device)
 
     def unload(self):
         if not settings.current.interrogator_keep_in_memory:

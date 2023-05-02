@@ -15,6 +15,7 @@ class Settings(NamedTuple):
     interrogator_use_cpu: bool = False
     interrogator_keep_in_memory: bool = False
     interrogator_max_length: int = 30
+    interrogator_model_dir: str = ""
 
 
 DEFAULT = Settings()
@@ -33,7 +34,8 @@ DESCRIPTIONS = {
     "tagger_use_spaces": "Replace underbar (_) in tags with whitespace ( )",
     "interrogator_use_cpu": "Use CPU to interrogate",
     "interrogator_keep_in_memory": "Keep interroagor in VRAM",
-    "interrogator_max_length": "Maximum text length for interrogator (for GIT only)"
+    "interrogator_max_length": "Maximum text length for interrogator (for GIT only)",
+    "interrogator_model_dir": "Path to directory for downloaded interrogator models",
 }
 
 

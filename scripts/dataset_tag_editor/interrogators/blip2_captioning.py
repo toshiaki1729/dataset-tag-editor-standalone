@@ -1,20 +1,22 @@
 from transformers import Blip2Processor, Blip2ForConditionalGeneration
 
-import devices, settings
+import devices, settings, paths
 
 
 class BLIP2Captioning:
-    def __init__(self, model_repo:str):
+    def __init__(self, model_repo: str):
         self.MODEL_REPO = model_repo
         self.processor: Blip2Processor = None
         self.model: Blip2ForConditionalGeneration = None
 
     def load(self):
         if self.model is None or self.processor is None:
-            self.processor = Blip2Processor.from_pretrained(self.MODEL_REPO)
-            self.model = Blip2ForConditionalGeneration.from_pretrained(self.MODEL_REPO).to(
-                devices.device
+            self.processor = Blip2Processor.from_pretrained(
+                self.MODEL_REPO, cache_dir=paths.setting_model_path
             )
+            self.model = Blip2ForConditionalGeneration.from_pretrained(
+                self.MODEL_REPO, cache_dir=paths.setting_model_path
+            ).to(devices.device)
 
     def unload(self):
         if not settings.current.interrogator_keep_in_memory:
