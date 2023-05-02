@@ -3,6 +3,7 @@ __pycache__/
 .vscode/
 venv/
 temp/
+models/
 
 config.json
 settings.json
