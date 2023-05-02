@@ -1,35 +1,22 @@
 from collections import namedtuple
 import importlib.util
-import mimetypes
 import os
-from pathlib import Path
-import signal
 import subprocess
 import sys
 import tempfile
-import time
 
 import gradio as gr
-import gradio.routes
-import gradio.utils
 from PIL import PngImagePlugin, Image
 
-import tab_main, tab_settings, cmd_args, settings, utilities, logger, devices
+import cmd_args, logger
 from shared_state import state
 
-interface = None
 
 # ================================================================
 # brought from AUTOMATIC1111/stable-diffusion-webui and modified
 
-mimetypes.init()
-mimetypes.add_type("application/javascript", ".js")
-
-GradioTemplateResponseOriginal = gradio.routes.templates.TemplateResponse
 Savedfile = namedtuple("Savedfile", ["name"])
 python = sys.executable
-git = "git"
-stored_commit_hash = None
 
 
 def check_python_version():
@@ -78,7 +65,7 @@ def save_pil_to_file(pil_image: Image.Image):
         if isinstance(key, str) and isinstance(value, str):
             metadata.add_text(key, value)
             use_metadata = True
-    
+
     if tmpdir:
         if not tmpdir.is_dir():
             tmpdir.mkdir(parents=True)
@@ -129,173 +116,30 @@ stderr: {result.stderr.decode(encoding="utf8", errors="ignore") if len(result.st
         raise RuntimeError(message)
 
 
-def webpath(fn: Path):
-    path = str(fn.absolute()).replace("\\", "/")
-    return f"file={path}?{os.path.getmtime(fn)}"
-
-
-def javascript_html():
-    js_path = utilities.base_dir_path() / "javascript"
-    head = ""
-    for p in sorted(js_path.glob("*.js")):
-        if not p.is_file():
-            continue
-        head += f'<script type="text/javascript" src="{webpath(p)}"></script>\n'
-
-    return head
-
-
-def css_html():
-    css_path = utilities.base_dir_path() / "css"
-    head = ""
-
-    for p in sorted(css_path.glob("*.css")):
-        if not p.is_file():
-            continue
-        head += f'<link rel="stylesheet" property="stylesheet" href="{webpath(p)}">'
-
-    return head
-
-
-def reload_javascript():
-    js = javascript_html()
-    css = css_html()
-
-    def template_response(*args, **kwargs):
-        res = GradioTemplateResponseOriginal(*args, **kwargs)
-        res.body = res.body.replace(b"</head>", f"{js}</head>".encode("utf8"))
-        res.body = res.body.replace(b"</body>", f"{css}</body>".encode("utf8"))
-        res.init_headers()
-        return res
-
-    gradio.routes.templates.TemplateResponse = template_response
-
-
-def prepare_environment():
-    torch_command = "pip install torch torchvision --index-url https://download.pytorch.org/whl/cu117"
-    if not is_installed("torch") or not is_installed("torchvision"):
-        run(
-            f'"{python}" -m {torch_command}',
-            "Installing torch and torchvision",
-            "Couldn't install torch",
-            live=True,
-        )
-    check_python_version()
-
-    logger.write(f"PyTorch device: {devices.device}")
-
-
-def commit_hash():
-    global stored_commit_hash
-
-    if stored_commit_hash is not None:
-        return stored_commit_hash
-
-    try:
-        command = f'cd "{utilities.base_dir()}" & {git} rev-parse HEAD'
-        result = run(command)
-        stored_commit_hash = result.stdout.decode('utf-8').strip()
-    except Exception:
-        stored_commit_hash = "<none>"
-
-    return stored_commit_hash
-
-
-def versions_html():
-    import torch
-
-    python_version = ".".join([str(x) for x in sys.version_info[0:3]])
-    commit = commit_hash()
-    short_commit = commit[0:8]
-
-    return f"""
-python: <span title="{sys.version}">{python_version}</span>
- • 
-torch: {getattr(torch, '__long_version__',torch.__version__)}
- • 
-gradio: {gr.__version__}
- • 
-commit: <a href="https://github.com/toshiaki1729/dataset-tag-editor-standalone/commit/{commit}">{short_commit}</a>
-"""
-
-
-def create_ui():
-    reload_javascript()
-
-    with gr.Blocks(analytics_enabled=False, title="Dataset Tag Editor") as gui:
-        with gr.Tab("Main"):
-            tab_main.on_ui_tabs()
-        with gr.Tab("Settings"):
-            tab_settings.on_ui_tabs()
-
-        gr.Textbox(elem_id="ui_created", value="", visible=False)
-
-        footer = f'<div class="versions">{versions_html()}</div>'
-        gr.HTML(footer, elem_id="footer")
-    return gui
-
-
-def wait_on_server():
-    global interface
-    while True:
-        time.sleep(0.5)
-        if state.need_restart:
-            state.need_restart = False
-            if interface:
-                time.sleep(0.25)
-                interface.close()
-                time.sleep(0.25)
-            break
-
-
 # ================================================================
 
+def prepare_environment():
+    if cmd_args.opts.force_install_torch is None:
+        pass
+    elif cmd_args.opts.force_install_torch == "cpu":
+        torch_command = "pip install -U torch torchvision"
+    else:
+        torch_command = f"pip install -U torch torchvision --index-url https://download.pytorch.org/whl/{cmd_args.opts.force_install_torch}"
+    if (
+        not is_installed("torch")
+        or not is_installed("torchvision")
+        or cmd_args.opts.force_install_torch is not None
+    ):
+        run(f'"{python}" -m {torch_command}')
+    check_python_version()
+    
+    import devices
+    logger.write(f"PyTorch device: {devices.device}")
 
-def main():
-    global interface
-
-    def sigint_handler(sig, frame):
-        print(f"Interrupted with signal {sig} in {frame}")
-        os._exit(0)
-
-    signal.signal(signal.SIGINT, sigint_handler)
-
-    while True:
-        state.begin()
-
-        settings.load()
-        
-        state.temp_dir = (utilities.base_dir_path() / "temp").absolute()
-        if settings.current.use_temp_files and settings.current.temp_directory != "":
-            state.temp_dir = Path(settings.current.temp_directory)
-
-        if settings.current.cleanup_tmpdir:
-            cleanup_tmpdr()
-
-        interface = create_ui().queue(64)
-
-        app, _, _ = interface.launch(
-            server_port=cmd_args.opts.port,
-            server_name=cmd_args.opts.server_name,
-            share=cmd_args.opts.share,
-            auth=[tuple(cred.split(":")) for cred in cmd_args.opts.auth]
-            if cmd_args.opts.auth
-            else None,
-            ssl_keyfile=cmd_args.opts.tls_key,
-            ssl_certfile=cmd_args.opts.tls_cert,
-            debug=cmd_args.opts.gradio_debug,
-            prevent_thread_lock=True,
-        )
-
-        # Disable a very open middleware as Stable Diffusion web UI does
-        app.user_middleware = [
-            x for x in app.user_middleware if x.cls.__name__ != "CORSMiddleware"
-        ]
-
-        wait_on_server()
-        logger.write("Restarting UI...")
-
+    
 
 if __name__ == "__main__":
     prepare_environment()
-    main()
+
+    import interface
+    interface.main()
