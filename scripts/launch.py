@@ -53,7 +53,7 @@ def register_tmp_file(gradio: gr.Blocks, filename):
 def save_pil_to_file(pil_image: Image.Image):
     already_saved_as = getattr(pil_image, "already_saved_as", None)
     if already_saved_as and os.path.isfile(already_saved_as):
-        register_tmp_file(interface, already_saved_as)
+        register_tmp_file(interface.interface, already_saved_as)
 
         file_obj = Savedfile(already_saved_as)
         return file_obj
