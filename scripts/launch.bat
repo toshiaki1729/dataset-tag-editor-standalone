@@ -15,7 +15,7 @@ exit /b
 
 :activate
 set PYTHON="%VENV_DIR%\Scripts\Python.exe"
-echo venv %PYTHON%
+call "%VENV_DIR%\Scripts\activate.bat"
 
 %PYTHON% scripts\launch.py %*
 pause
