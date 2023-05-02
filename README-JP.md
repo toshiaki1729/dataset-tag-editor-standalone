@@ -138,3 +138,9 @@ python scripts/launch.py [arguments]
   例："1boy", "2boys", … がそれぞれ、 "1girl", "2girls", … に置換されます。  
   カンマはタグの区切りとみなされるため、カンマを追加・削除することで新しいタグを追加・削除できます。  
   正規表現（regex）を使うと、複雑な条件に応じてタグの編集が可能です。
+
+
+## トラブルシューティング
+### ギャラリーに画像が表示されず、コンソールに "All files must contained within the Gradio python app working directory…" と出ている
+"Settings" タブで、サムネイル画像を一時保存するフォルダを指定してください。
+"Directory to save temporary files" にパスを指定して "Force using temporary file…" をチェックしてください。
