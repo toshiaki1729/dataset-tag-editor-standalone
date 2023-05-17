@@ -146,12 +146,12 @@ python scripts/launch.py [arguments]
 "Directory to save temporary files" にパスを指定して "Force using temporary file…" をチェックしてください。
 
 ### PyTorch が CUDA を使っていない
-- 他のスクリプトと共有するために PyTorch をシステムにインストールする
+- 他のスクリプトと共有するために PyTorch をシステムにインストールする場合
   1. [PyTorchのインストール方法](https://pytorch.org/get-started/locally/) に従って、ただし`-U` (`--upgrade`) をつけてインストールする
   (霊) ```pip3 install -U torch torchvision --index-url https://download.pytorch.org/whl/cu118```
   1. `venv` フォルダを削除する
   1. `install.bat` を実行する
-- PyTorch を venv のみにインストールする
+- PyTorch を venv のみにインストールする場合
   1. `launch_user.bat` をテキストエディタで開く
   2. 3行目を `set COMMANDLINE_ARGS="--force-install-torch cu118"` に変える  
   (`cu117`、`cu118` または `cpu` から選べます)
