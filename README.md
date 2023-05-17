@@ -143,3 +143,16 @@ Please note that all batch editing will be applyed **only to displayed images (=
 ### Cannot see any image in dataset and saying "All files must contained within the Gradio python app working directory…"
 Set folder to store temporaly image in the "Settings" tab.
 Input path in "Directory to save temporary files" and check "Force using temporary file…"
+
+### My PyTorch is working without CUDA
+Choose one from the followings
+- Install PyTorch in your system to share
+  1. Follow [the PyTorch installation guide](https://pytorch.org/get-started/locally/) with -U (--upgrade) option  
+  (example) ```pip3 install -U torch torchvision --index-url https://download.pytorch.org/whl/cu118```
+  1. Remove `venv` folder
+  1. Run `install.bat`
+- Install PyTorch only in venv
+  1. Open `launch_user.bat` with some text editor
+  2. Change the 3rd line to `set COMMANDLINE_ARGS="--force-install-torch cu118"` (you can choose from `cu117`, `cu118` or `cpu`)
+  3. Run `launch_user.bat`
+  4. (Remove the command line argument)
