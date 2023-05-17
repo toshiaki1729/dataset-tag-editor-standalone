@@ -3,13 +3,31 @@ import cmd_args
 import torch
 
 
+# ================================================================
+# borrowed from AUTOMATIC1111/stable-diffusion-webui
+
+# has_mps is only available in nightly pytorch (for now) and macOS 12.3+.
+# check `getattr` and try it for compatibility
+def check_for_mps() -> bool:
+    if not getattr(torch, "has_mps", False):
+        return False
+    try:
+        torch.zeros(1).to(torch.device("mps"))
+        return True
+    except Exception:
+        return False
+
+
+has_mps = check_for_mps()
+
+# ================================================================
+
+
 def has_mps():
     if sys.platform != "darwin":
         return False
     else:
-        from modules import mac_specific
-
-        return mac_specific.has_mps
+        return has_mps
 
 
 def get_cuda():
@@ -29,7 +47,7 @@ def get_cuda_device():
 def get_optimal_device():
     if torch.cuda.is_available():
         return get_cuda_device()
-    
+
     if has_mps():
         torch.device("mps")
 
