@@ -145,9 +145,8 @@ Set folder to store temporaly image in the "Settings" tab.
 Input path in "Directory to save temporary files" and check "Force using temporary file…"
 
 ### My PyTorch is working without CUDA
-Choose one from the followings
-- Install PyTorch in your system to share
-  1. Follow [the PyTorch installation guide](https://pytorch.org/get-started/locally/) with -U (--upgrade) option  
+- Install PyTorch in your system to share it with other scripts
+  1. Follow [the PyTorch installation guide](https://pytorch.org/get-started/locally/) with `-U` (`--upgrade`) option  
   (example) ```pip3 install -U torch torchvision --index-url https://download.pytorch.org/whl/cu118```
   1. Remove `venv` folder
   1. Run `install.bat`
