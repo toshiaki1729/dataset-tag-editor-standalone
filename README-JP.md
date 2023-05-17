@@ -147,8 +147,8 @@ python scripts/launch.py [arguments]
 
 ### PyTorch が CUDA を使っていない
 - 他のスクリプトと共有するために PyTorch をシステムにインストールする場合
-  1. [PyTorchのインストール方法](https://pytorch.org/get-started/locally/) に従って、ただし`-U` (`--upgrade`) をつけてインストールする
-  (霊) ```pip3 install -U torch torchvision --index-url https://download.pytorch.org/whl/cu118```
+  1. [PyTorchのインストール方法](https://pytorch.org/get-started/locally/) に従って、ただし`-U` (`--upgrade`) をつけてインストールする  
+  (例) ```pip3 install -U torch torchvision --index-url https://download.pytorch.org/whl/cu118```
   1. `venv` フォルダを削除する
   1. `install.bat` を実行する
 - PyTorch を venv のみにインストールする場合
