@@ -18,7 +18,7 @@ def check_for_mps() -> bool:
         return False
 
 
-has_mps = check_for_mps()
+_has_mps = check_for_mps()
 
 # ================================================================
 
@@ -27,7 +27,7 @@ def has_mps():
     if sys.platform != "darwin":
         return False
     else:
-        return has_mps
+        return _has_mps
 
 
 def get_cuda():
