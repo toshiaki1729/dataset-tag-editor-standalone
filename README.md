@@ -56,7 +56,7 @@ Just run `launch_user.bat`
 
 ### Linux
 ```sh
-source ./venv/Scripts/activate
+source ./venv/bin/activate
 python scripts/launch.py [arguments]
 ```
 
