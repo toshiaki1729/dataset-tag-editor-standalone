@@ -57,7 +57,7 @@ pip install -r requirements.txt
 
 ### Linux
 ```sh
-source ./venv/Scripts/activate
+source ./venv/bin/activate
 python scripts/launch.py [arguments]
 ```
 
