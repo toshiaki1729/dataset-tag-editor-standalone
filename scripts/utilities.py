@@ -5,6 +5,9 @@ import threading
 
 from PIL import Image
 
+if not hasattr(Image, 'Resampling'):  # Pillow<9.0
+    Image.Resampling = Image
+
 queue_lock = threading.Lock()
 
 
