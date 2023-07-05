@@ -3,7 +3,8 @@
 [日本語 Readme](README-JP.md)
 
 This is a WebUI tool to edit training dataset for Text2Image Models.  
-This is a standalone version of [Dataset Tag Editor](https://github.com/toshiaki1729/stable-diffusion-webui-dataset-tag-editor), which is an extension for [Stable Diffusion web UI by AUTOMATIC1111](https://github.com/AUTOMATIC1111/stable-diffusion-webui). 
+This is **a standalone version** of [Dataset Tag Editor](https://github.com/toshiaki1729/stable-diffusion-webui-dataset-tag-editor), which is an extension for [Stable Diffusion web UI by AUTOMATIC1111](https://github.com/AUTOMATIC1111/stable-diffusion-webui). 
+**Please do not put into `extensions` folder of AUTOMATIC1111's webUI.**
 
 ![](pic/ss01.png)
 
