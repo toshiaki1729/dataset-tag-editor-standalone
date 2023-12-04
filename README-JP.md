@@ -61,6 +61,18 @@ source ./venv/bin/activate
 python scripts/launch.py [arguments]
 ```
 
+### Google Colab
+
+Google Colabユーザーは、以下のコマンドを実行し、生成されたGradioのPublic URLにアクセスすることで利用できます。  
+(おそらく、これは現在Colab Proでのみ利用可能だと思います)。
+
+```sh
+%cd /content
+!git clone https://github.com/toshiaki1729/dataset-tag-editor-standalone.git
+%cd /content/dataset-tag-editor-standalone
+!pip install -r requirements.txt
+!python scripts/launch.py --share
+```
 
 ## 特徴
 以下、「タグ」はカンマ区切りされたキャプションの各部分を意味します。
