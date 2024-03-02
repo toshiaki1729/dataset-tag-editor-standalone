@@ -1,4 +1,5 @@
 gradio==3.22.1
+fastapi==0.95.2
 transformers>=4.27.4
 requests
 pillow
