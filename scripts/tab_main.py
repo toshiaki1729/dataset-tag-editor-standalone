@@ -322,7 +322,7 @@ def on_ui_tabs():
                 btn_save_setting_as_default = gr.Button(value="Save current settings")
                 btn_restore_default = gr.Button(value="Restore settings to default")
 
-        with gr.Row().style(equal_height=False):
+        with gr.Row(equal_height=False):
             with gr.Column():
                 ui.load_dataset.create_ui(cfg_general)
                 ui.dataset_gallery.create_ui(settings.current.image_columns)

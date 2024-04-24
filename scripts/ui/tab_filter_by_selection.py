@@ -40,8 +40,7 @@ class FilterBySelectionUI(UIBase):
                 )
 
             self.gl_filter_images = gr.Gallery(
-                label="Filter Images", elem_id="filter_gallery"
-            ).style(grid=image_columns)
+                label="Filter Images", elem_id="filter_gallery", columns=image_columns)
             self.txt_selection = gr.HTML(value=self.get_current_txt_selection())
 
             with gr.Row():

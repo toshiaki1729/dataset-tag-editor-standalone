@@ -30,8 +30,7 @@ class DatasetGalleryUI(UIBase):
                 value=None, label="hidden_idx_prev"
             )
         self.gl_dataset_images = gr.Gallery(
-            label="Dataset Images", elem_id="dataset_gallery"
-        ).style(grid=image_columns)
+            label="Dataset Images", elem_id="dataset_gallery", columns=image_columns)
 
     def set_callbacks(
         self,
