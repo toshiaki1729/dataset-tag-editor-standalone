@@ -1,3 +1,3 @@
 import dataset_tag_editor as dte_module
 
-dte_instance = dte_module.DatasetTagEditor.get_instance()
+dte_instance = dte_module.DatasetTagEditor()

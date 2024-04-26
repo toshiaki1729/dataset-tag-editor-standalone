@@ -17,4 +17,4 @@ class State(Singleton):
     def interrupt(self):
         self.interrupted = True
 
-state = State.get_instance()
+state = State()
