@@ -27,20 +27,20 @@ BLIP2_CAPTIONING_NAMES = [
     "blip2-flan-t5-xxl",
 ]
 
-WD_TAGGER_NAMES = [
-    "wd-v1-4-vit-tagger",
-    "wd-v1-4-convnext-tagger",
-    "wd-v1-4-vit-tagger-v2",
-    "wd-v1-4-convnext-tagger-v2",
-    "wd-v1-4-swinv2-tagger-v2",
-]
-WD_TAGGER_THRESHOLDS = [
-    0.35,
-    0.35,
-    0.3537,
-    0.3685,
-    0.3771,
-]  # v1: idk if it's okay  v2: P=R thresholds on each repo https://huggingface.co/SmilingWolf
+WD_TAGGERS = {
+    "wd-v1-4-vit-tagger" : 0.35,
+    "wd-v1-4-convnext-tagger" : 0.35,
+    "wd-v1-4-vit-tagger-v2" : 0.3537,
+    "wd-v1-4-convnext-tagger-v2" : 0.3685,
+    "wd-v1-4-convnextv2-tagger-v2" : 0.371,
+    "wd-v1-4-swinv2-tagger-v2" : 0.3771,
+    "wd-v1-4-moat-tagger-v2" : 0.3771,
+    "wd-v1-4-vit-tagger-v3" : 0.2614,
+    "wd-v1-4-convnext-tagger-v3" : 0.2682,
+    "wd-v1-4-swinv2-tagger-v3" : 0.2653,
+}
+# {tagger name : default tagger threshold}
+# v1: idk if it's okay  v2: P=R thresholds on each repo https://huggingface.co/SmilingWolf
 
 INTERROGATORS = (
     [captioning.BLIP()]
@@ -48,8 +48,8 @@ INTERROGATORS = (
     + [captioning.GITLarge()]
     + [tagger.DeepDanbooru()]
     + [
-        tagger.WaifuDiffusion(name, WD_TAGGER_THRESHOLDS[i])
-        for i, name in enumerate(WD_TAGGER_NAMES)
+        tagger.WaifuDiffusion(name, threshold)
+        for name, threshold in WD_TAGGERS
     ]
 )
 INTERROGATOR_NAMES = [it.name() for it in INTERROGATORS]
