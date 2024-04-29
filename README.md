@@ -76,7 +76,7 @@ Note. "tag" means each blocks of caption separated by commas.
 - Batch search and replace
   - [regular expression](https://docs.python.org/3/library/re.html#regular-expression-syntax) can be used
 - Use interrogators
-  - BLIP, BLIP2, GIT, DeepDanbooru, SmilingWolf's [WDv1.4 Tagger](https://huggingface.co/SmilingWolf) (v1, v2 and some variants of them)
+  - BLIP, BLIP2, GIT, DeepDanbooru, SmilingWolf's [WDv1.4 Tagger](https://huggingface.co/SmilingWolf) (v1, v2, v3 and some variants of them)
 - Batch remove image and/or caption files
 
 
