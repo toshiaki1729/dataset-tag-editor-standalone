@@ -23,7 +23,7 @@ class TagFilterUI:
         self.prefix = False
         self.suffix = False
         self.regex = False
-        self.on_filter_update_callbacks = []
+        self.after_filter_update_callbacks = []
 
     def get_filter(self):
         return self.filter
