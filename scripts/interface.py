@@ -48,14 +48,12 @@ def register_tmp_file(gradio: gr.Blocks, filename):
         }
 
 
-def save_pil_to_file(pil_image: Image.Image):
+def save_pil_to_cache(pil_image: Image.Image, *args, **kwargs):
     already_saved_as = getattr(pil_image, "already_saved_as", None)
     if already_saved_as and os.path.isfile(already_saved_as):
         register_tmp_file(interface, already_saved_as)
-
-        file_obj = Savedfile(already_saved_as)
-        return file_obj
-
+        return str(Path(already_saved_as).resolve())
+    
     tmpdir = state.temp_dir
     use_metadata = False
     metadata = PngImagePlugin.PngInfo()
@@ -71,11 +69,34 @@ def save_pil_to_file(pil_image: Image.Image):
     else:
         file_obj = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
     pil_image.save(file_obj, pnginfo=(metadata if use_metadata else None))
-    return file_obj
+
+    pil_image.already_saved_as = file_obj.name
+    
+    return file_obj.name
 
 
-# override save to file function so that it also writes PNG info
-gr.processing_utils.save_pil_to_file = save_pil_to_file
+def save_file_to_cache_nocache(file_path: str | Path, cache_dir: str) -> str:
+    return str(Path(file_path).resolve())
+
+
+def save_file_to_cache_cacheonce(file_path: str | Path, cache_dir: str) -> str:
+    """Returns a temporary file path for a copy of the given file path if it does
+    not already exist. Otherwise returns the path to the existing temp file."""
+    import hashlib
+    filename = hashlib.md5(file_path.encode()).hexdigest()
+    temp_dir = Path(cache_dir)
+    temp_dir.mkdir(exist_ok=True, parents=True)
+    
+    from gradio_client import utils as client_utils
+    import shutil
+
+    filename = client_utils.strip_invalid_filename_characters(filename)
+    full_temp_file_path = str(Path(temp_dir / filename).resolve())
+
+    if not Path(full_temp_file_path).exists():
+        shutil.copy2(file_path, full_temp_file_path)
+
+    return full_temp_file_path
 
 
 def webpath(fn: Path):
@@ -204,12 +225,24 @@ def main():
         state.temp_dir = (utilities.base_dir_path() / "temp").absolute()
         if settings.current.use_temp_files and settings.current.temp_directory != "":
             state.temp_dir = Path(settings.current.temp_directory)
+        
+        os.environ['GRADIO_TEMP_DIR'] = state.temp_dir.name
+        
+        # override save function to prevent from making anonying temporaly files
+        gr.gradio.processing_utils.save_pil_to_cache = save_pil_to_cache
+
+        if settings.current.use_temp_files:
+            gr.gradio.processing_utils.save_file_to_cache = save_file_to_cache_cacheonce
+        else:
+            gr.gradio.processing_utils.save_file_to_cache = save_file_to_cache_nocache
 
         if settings.current.cleanup_tmpdir:
             cleanup_tmpdr()
 
         interface = create_ui().queue(64)
 
+        allowed_paths = settings.current.allowed_paths.split(', ')
+        allowed_paths = [str(Path(path).absolute()) for path in allowed_paths]
         app, _, _ = interface.launch(
             server_port=cmd_args.opts.port,
             server_name=cmd_args.opts.server_name,
@@ -221,6 +254,7 @@ def main():
             ssl_certfile=cmd_args.opts.tls_cert,
             debug=cmd_args.opts.gradio_debug,
             prevent_thread_lock=True,
+            allowed_paths=allowed_paths
         )
 
         # Disable a very open middleware as Stable Diffusion web UI does
