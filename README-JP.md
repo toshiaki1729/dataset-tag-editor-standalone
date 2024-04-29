@@ -142,15 +142,15 @@ python scripts/launch.py [arguments]
 
 ## トラブルシューティング
 ### ギャラリーに画像が表示されず、コンソールにエラーが表示されない
-(おそらくv0.0.6以降)
-このプログラムのあるフォルダ以外から画像を読み込む場合は、"Settings" タブで、画像の読み取りを許可するフォルダを指定する、もしくは、下の項目と同様の方法で、サムネイル画像を一時保存するフォルダを指定してください。
-"Path whitelist to show images …" にパスを指定します。
-子フォルダに全て適用されるため、ドライブ名を"C:\"のように指定すると、Cドライブの全てに対して読み取りを許可します。
+(おそらくv0.0.6以降)  
+このプログラムのあるフォルダ以外から画像を読み込む場合は、"Settings" タブで、画像の読み取りを許可するフォルダを指定する、もしくは、下の項目と同様の方法で、サムネイル画像を一時保存するフォルダを指定してください。  
+"Path whitelist to show images …" にパスを指定します。  
+子フォルダに全て適用されるため、ドライブ名を"C:\"のように指定すると、Cドライブの全てに対して読み取りを許可します。  
 
 ### ギャラリーに画像が表示されず、コンソールに "All files must contained within the Gradio python app working directory…" と出ている
-(おそらくv0.0.5以前)
-"Settings" タブで、サムネイル画像を一時保存するフォルダを指定してください。
-"Directory to save temporary files" にパスを指定して "Force using temporary file…" をチェックしてください。
+(おそらくv0.0.5以前)  
+"Settings" タブで、サムネイル画像を一時保存するフォルダを指定してください。  
+"Directory to save temporary files" にパスを指定して "Force using temporary file…" をチェックしてください。  
 
 ### PyTorch が CUDA を使っていない
 - 他のスクリプトと共有するために PyTorch をシステムにインストールする場合

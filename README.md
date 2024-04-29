@@ -145,15 +145,15 @@ Please note that all batch editing will be applyed **only to displayed images (=
 ## Trouble shooting
 ### Cannot see any image in dataset and no error is shown
 (maybe in >= v0.0.6)
-If you want to load images from other directory than this app, you should register the directory in whitelist in the "Settings" tab, or use temporary image file (as same as the next section).
-Input path in "Path whitelist to show images …" and save settings.
-You can input drive name like "C:\" (Windows).
+If you want to load images from other directory than this app, you should register the directory in whitelist in the "Settings" tab, or use temporary image file (as same as the next section).  
+Input path in "Path whitelist to show images …" and save settings.  
+You can input drive name like "C:\" (Windows).  
 
 
 ### Cannot see any image in dataset and saying "All files must contained within the Gradio python app working directory…"
-(maybe in <= v0.0.5)
-Set folder to store temporaly image in the "Settings" tab.
-Input path in "Directory to save temporary files" and check "Force using temporary file…" and save settings.
+(maybe in <= v0.0.5)  
+Set folder to store temporaly image in the "Settings" tab.  
+Input path in "Directory to save temporary files" and check "Force using temporary file…" and save settings.  
 
 
 ### My PyTorch is working without CUDA
