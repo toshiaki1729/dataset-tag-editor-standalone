@@ -144,7 +144,7 @@ Please note that all batch editing will be applyed **only to displayed images (=
 
 ## Trouble shooting
 ### Cannot see any image in dataset and no error is shown
-(maybe in >= v0.0.6)
+(maybe in >= v0.0.6)  
 If you want to load images from other directory than this app, you should register the directory in whitelist in the "Settings" tab, or use temporary image file (as same as the next section).  
 Input path in "Path whitelist to show images …" and save settings.  
 You can input drive name like "C:\" (Windows).  
