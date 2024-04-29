@@ -9,8 +9,11 @@ import torch
 # has_mps is only available in nightly pytorch (for now) and macOS 12.3+.
 # check `getattr` and try it for compatibility
 def check_for_mps() -> bool:
-    if not getattr(torch, "has_mps", False):
+    if hasattr(torch, "backends"):
+        return torch.backends.mps.is_available()
+    elif not getattr(torch, "has_mps", False):
         return False
+    
     try:
         torch.zeros(1).to(torch.device("mps"))
         return True
