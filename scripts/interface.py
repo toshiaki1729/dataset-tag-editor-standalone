@@ -242,7 +242,7 @@ def main():
         interface = create_ui().queue(64)
 
         allowed_paths = settings.current.allowed_paths.split(', ')
-        allowed_paths = [str(Path(path).absolute()) for path in allowed_paths]
+        allowed_paths = [str(Path(path).absolute()) for path in allowed_paths] + [utilities.base_dir_path()]
         app, _, _ = interface.launch(
             server_port=cmd_args.opts.port,
             server_name=cmd_args.opts.server_name,
