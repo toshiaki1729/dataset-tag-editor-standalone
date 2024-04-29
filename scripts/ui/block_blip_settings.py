@@ -28,15 +28,10 @@ class Config(NamedTuple):
     params:Params = Params()
     
 
-class TagSelectUI:
-
-    
-
+class BLIPSettingUI:
     def create_param_ui(self):
         self.ui_blocks:dict[str, gr.Blocks] = dict()
         th = get_type_hints(Config)
-
-
 
     def create_ui(
         self,

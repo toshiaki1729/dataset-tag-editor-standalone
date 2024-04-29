@@ -163,4 +163,4 @@ class TagSelectUI:
         )
         tags = dte_instance.write_tags(tags, self.sort_by)
         selected_tags = dte_instance.write_tags(list(self.selected_tags), self.sort_by)
-        return gr.CheckboxGroup.update(value=selected_tags, choices=tags)
+        return gr.CheckboxGroup(value=selected_tags, choices=tags)

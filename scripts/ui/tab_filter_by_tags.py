@@ -21,7 +21,7 @@ class FilterByTagsUI(UIBase):
             tag_filter_mode=filters.TagFilter.Mode.EXCLUSIVE
         )
 
-    def create_ui(self, cfg_filter_p, cfg_filter_n, get_filters):
+    def create_ui(self, cfg_filter_p, cfg_filter_n, get_filters: Callable[[], list[dte_module.filters.Filter]]):
         with gr.Row():
             self.btn_clear_tag_filters = gr.Button(value="Clear tag filters")
             self.btn_clear_all_filters = gr.Button(value="Clear ALL filters")
@@ -74,7 +74,7 @@ class FilterByTagsUI(UIBase):
         move_or_delete_files: MoveOrDeleteFilesUI,
         update_gallery: Callable[[], list],
         update_filter_and_gallery: Callable[[], list],
-        get_filters: Callable[[], list[dte_module.filters.Filter]],
+        get_filters: Callable[[], list[dte_module.filters.Filter]]
     ):
         common_callback = (
             lambda: update_gallery()
@@ -90,18 +90,16 @@ class FilterByTagsUI(UIBase):
             + [batch_edit_captions.tag_select_ui_remove.cbg_tags]
         )
 
-        self.tag_filter_ui.on_filter_update(
+        self.tag_filter_ui.after_filter_update(
             fn=lambda: common_callback() + [", ".join(self.tag_filter_ui.filter.tags)],
             inputs=None,
-            outputs=common_callback_output + [batch_edit_captions.tb_sr_selected_tags],
-            _js="(...args) => {gl_dataset_images_close(); return args}",
+            outputs=common_callback_output + [batch_edit_captions.tb_sr_selected_tags]
         )
 
-        self.tag_filter_ui_neg.on_filter_update(
+        self.tag_filter_ui_neg.after_filter_update(
             fn=common_callback,
             inputs=None,
-            outputs=common_callback_output,
-            _js="(...args) => {gl_dataset_images_close(); return args}",
+            outputs=common_callback_output
         )
 
         self.tag_filter_ui.set_callbacks()

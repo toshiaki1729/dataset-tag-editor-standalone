@@ -115,9 +115,9 @@ def get_filters():
 
 
 def update_gallery():
-    img_indices = ui.dte_instance.get_filtered_imgindices(filters=get_filters())
+    imgs = ui.dte_instance.get_filtered_imgs(filters=get_filters())
     total_image_num = len(ui.dte_instance.dataset)
-    displayed_image_num = len(img_indices)
+    displayed_image_num = len(imgs)
     ui.gallery_state.register_value(
         "Displayed Images", f"{displayed_image_num} / {total_image_num} total"
     )
@@ -130,10 +130,7 @@ def update_gallery():
         f"{len(ui.filter_by_selection.path_filter.paths)} images",
     )
     return [
-        [str(i) for i in img_indices],
-        1,
-        -1,
-        -1,
+        imgs,
         -1,
         ui.gallery_state.get_current_gallery_txt(),
     ]
@@ -335,6 +332,7 @@ def on_ui_tabs():
         )
 
         o_update_gallery = [
+            ui.dataset_gallery.gl_dataset_images,
             ui.edit_caption_of_selected_image.nb_hidden_image_index_save_or_not,
             ui.gallery_state.txt_gallery,
         ]
@@ -365,7 +363,7 @@ def on_ui_tabs():
             ui.filter_by_tags,
             ui.filter_by_selection,
             ui.batch_edit_captions,
-            update_filter_and_gallery,
+            update_filter_and_gallery
         )
         ui.dataset_gallery.set_callbacks(ui.gallery_state)
         ui.gallery_state.set_callbacks(ui.dataset_gallery)
@@ -376,7 +374,7 @@ def on_ui_tabs():
             ui.move_or_delete_files,
             update_gallery,
             update_filter_and_gallery,
-            get_filters,
+            get_filters
         )
         ui.filter_by_selection.set_callbacks(
             o_update_filter_and_gallery,

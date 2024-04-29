@@ -147,16 +147,8 @@ class LoadDatasetUI(UIBase):
                 settings.current.max_resolution
             )
             imgs = dte_instance.get_filtered_imgs(filters=[])
-            img_indices = dte_instance.get_filtered_imgindices(filters=[])
             return (
                 [imgs, []]
-                + [
-                    gr.CheckboxGroup.update(
-                        value=[str(i) for i in img_indices],
-                        choices=[str(i) for i in img_indices],
-                    ),
-                    1,
-                ]
                 + filter_by_tags.clear_filters(update_filter_and_gallery)
                 + [batch_edit_captions.tag_select_ui_remove.cbg_tags_update()]
             )
@@ -181,10 +173,6 @@ class LoadDatasetUI(UIBase):
                 dataset_gallery.gl_dataset_images,
                 filter_by_selection.gl_filter_images,
             ]
-            + [
-                dataset_gallery.cbg_hidden_dataset_filter,
-                dataset_gallery.nb_hidden_dataset_filter_apply,
-            ]
             + o_update_filter_and_gallery,
         )
 
@@ -192,7 +180,6 @@ class LoadDatasetUI(UIBase):
             dte_instance.clear()
             return (
                 [[], []]
-                + [gr.CheckboxGroup.update(value=[], choices=[]), 1]
                 + filter_by_tags.clear_filters(update_filter_and_gallery)
                 + [batch_edit_captions.tag_select_ui_remove.cbg_tags_update()]
             )
@@ -202,10 +189,6 @@ class LoadDatasetUI(UIBase):
             outputs=[
                 dataset_gallery.gl_dataset_images,
                 filter_by_selection.gl_filter_images,
-            ]
-            + [
-                dataset_gallery.cbg_hidden_dataset_filter,
-                dataset_gallery.nb_hidden_dataset_filter_apply,
             ]
             + o_update_filter_and_gallery,
         )

@@ -88,10 +88,10 @@ class TagFilterUI:
             label="Filter Images by Tags", interactive=True
         )
 
-    def on_filter_update(
-        self, fn: Callable[[list], list], inputs=None, outputs=None, _js=None
+    def after_filter_update(
+        self, fn: Callable[[list], list], inputs=None, outputs=None, js=None
     ):
-        self.on_filter_update_callbacks.append((fn, inputs, outputs, _js))
+        self.on_filter_update_callbacks.append((fn, inputs, outputs, js))
 
     def set_callbacks(self):
         self.tb_search_tags.change(
@@ -120,13 +120,13 @@ class TagFilterUI:
         self.rb_logic.change(
             fn=self.rd_logic_changed, inputs=[self.rb_logic], outputs=[self.cbg_tags]
         )
-        for fn, inputs, outputs, _js in self.on_filter_update_callbacks:
-            self.rb_logic.change(fn=fn, inputs=inputs, outputs=outputs, _js=_js)
+        for fn, inputs, outputs, js in self.on_filter_update_callbacks:
+            self.rb_logic.change(fn=lambda:None).then(fn=fn, inputs=inputs, outputs=outputs, js=js)
         self.cbg_tags.change(
             fn=self.cbg_tags_changed, inputs=[self.cbg_tags], outputs=[self.cbg_tags]
         )
-        for fn, inputs, outputs, _js in self.on_filter_update_callbacks:
-            self.cbg_tags.change(fn=fn, inputs=inputs, outputs=outputs, _js=_js)
+        for fn, inputs, outputs, js in self.on_filter_update_callbacks:
+            self.cbg_tags.change(fn=lambda:None).then(fn=fn, inputs=inputs, outputs=outputs, js=js)
 
     def tb_search_tags_changed(self, tb_search_tags: str):
         self.filter_word = tb_search_tags
@@ -204,7 +204,7 @@ class TagFilterUI:
         tags = dte_instance.write_tags(tags, self.sort_by)
         tags_in_filter = dte_instance.write_tags(tags_in_filter, self.sort_by)
 
-        return gr.CheckboxGroup.update(value=tags_in_filter, choices=tags)
+        return gr.CheckboxGroup(value=tags_in_filter, choices=tags)
 
     def clear_filter(self):
         self.filter = TagFilter(logic=self.logic, mode=self.filter_mode)
