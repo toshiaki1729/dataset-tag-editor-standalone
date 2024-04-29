@@ -161,6 +161,6 @@ python scripts/launch.py [arguments]
 - PyTorch を venv のみにインストールする場合
   1. `launch_user.bat` をテキストエディタで開く
   2. 3行目を `set COMMANDLINE_ARGS="--force-install-torch cu118"` に変える  
-  (`cu117`、`cu118` または `cpu` から選べます)
+  (`cu117`、`cu118`、`cu121` または `cpu` から選べます)
   3. `launch_user.bat` を実行する
   4. (付け足したコマンドライン引数を削除する)

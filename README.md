@@ -164,6 +164,6 @@ Input path in "Directory to save temporary files" and check "Force using tempora
   1. Run `install.bat`
 - To install PyTorch only in venv
   1. Open `launch_user.bat` with some text editor
-  2. Change the 3rd line to `set COMMANDLINE_ARGS="--force-install-torch cu118"` (you can choose from `cu117`, `cu118` or `cpu`)
+  2. Change the 3rd line to `set COMMANDLINE_ARGS="--force-install-torch cu118"` (you can choose from `cu117`, `cu118`, `cu121` or `cpu`)
   3. Run `launch_user.bat`
   4. (Remove the command line argument)
