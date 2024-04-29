@@ -44,7 +44,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "--force-install-torch",
-    choices=['cu117', 'cu118', 'cpu'],
+    choices=['cu117', 'cu118', 'cu121', 'cpu'],
     help="Force install the latest PyTorch with specified compute platform (if not installed in this computer)",
     default=None,
 )
