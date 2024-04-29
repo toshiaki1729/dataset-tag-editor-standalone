@@ -35,9 +35,9 @@ WD_TAGGERS = {
     "wd-v1-4-convnextv2-tagger-v2" : 0.371,
     "wd-v1-4-swinv2-tagger-v2" : 0.3771,
     "wd-v1-4-moat-tagger-v2" : 0.3771,
-    "wd-v1-4-vit-tagger-v3" : 0.2614,
-    "wd-v1-4-convnext-tagger-v3" : 0.2682,
-    "wd-v1-4-swinv2-tagger-v3" : 0.2653,
+    "wd-vit-tagger-v3" : 0.2614,
+    "wd-convnext-tagger-v3" : 0.2682,
+    "wd-swinv2-tagger-v3" : 0.2653,
 }
 # {tagger name : default tagger threshold}
 # v1: idk if it's okay  v2: P=R thresholds on each repo https://huggingface.co/SmilingWolf
