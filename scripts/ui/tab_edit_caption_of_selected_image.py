@@ -19,6 +19,8 @@ SortOrder = dte_instance.SortOrder
 class EditCaptionOfSelectedImageUI(UIBase):
     def __init__(self):
         self.change_is_saved = True
+        self.prev_idx = -1
+        self.current_idx = -1
 
     def create_ui(self, cfg_edit_selected):
         with gr.Row(visible=False):
@@ -128,51 +130,47 @@ class EditCaptionOfSelectedImageUI(UIBase):
         )
 
         def gallery_index_changed(
-            next_idx: int,
-            prev_idx: int,
+            select_data: gr.SelectData,
             edit_caption: str,
             copy_automatically: bool,
             warn_change_not_saved: bool,
         ):
-            next_idx = int(next_idx) if next_idx is not None else -1
-            prev_idx = int(prev_idx) if prev_idx is not None else -1
+            self.prev_idx = self.current_idx
+            self.current_idx = select_data.index if select_data.selected else -1
             img_paths = dte_instance.get_filtered_imgpaths(filters=get_filters())
             prev_tags_txt = ""
-            if 0 <= prev_idx and prev_idx < len(img_paths):
+            if 0 <= self.prev_idx and self.prev_idx < len(img_paths):
                 prev_tags_txt = ", ".join(
-                    dte_instance.get_tags_by_image_path(img_paths[prev_idx])
+                    dte_instance.get_tags_by_image_path(img_paths[self.prev_idx])
                 )
             else:
-                prev_idx = -1
+                self.prev_idx = -1
 
             next_tags_txt = ""
-            if 0 <= next_idx and next_idx < len(img_paths):
+            if 0 <= self.current_idx and self.current_idx < len(img_paths):
                 next_tags_txt = ", ".join(
-                    dte_instance.get_tags_by_image_path(img_paths[next_idx])
+                    dte_instance.get_tags_by_image_path(img_paths[self.current_idx])
                 )
 
-            return (
+            return \
                 [
-                    prev_idx
+                    self.prev_idx
                     if warn_change_not_saved
                     and edit_caption != prev_tags_txt
                     and not self.change_is_saved
                     else -1
-                ]
-                + [next_tags_txt, next_tags_txt if copy_automatically else edit_caption]
+                ]\
+                + [next_tags_txt, next_tags_txt if copy_automatically else edit_caption]\
                 + [edit_caption]
-            )
 
         self.nb_hidden_image_index_save_or_not.change(
             fn=lambda a: None,
-            _js="(a) => ask_save_change_or_not(a)",
+            js="(a) => ask_save_change_or_not(a)",
             inputs=self.nb_hidden_image_index_save_or_not,
         )
-        dataset_gallery.nb_hidden_image_index.change(
+        dataset_gallery.gl_dataset_images.select(
             fn=gallery_index_changed,
             inputs=[
-                dataset_gallery.nb_hidden_image_index,
-                dataset_gallery.nb_hidden_image_index_prev,
                 self.tb_edit_caption,
                 self.cb_copy_caption_automatically,
                 self.cb_ask_save_when_caption_changed,
@@ -297,8 +295,7 @@ class EditCaptionOfSelectedImageUI(UIBase):
                 self.rb_sort_by,
                 self.rb_sort_order,
             ],
-            outputs=o_update_filter_and_gallery,
-            _js="(a,b,c,d) => {gl_dataset_images_close(); return [a, b, c, d]}",
+            outputs=o_update_filter_and_gallery
         )
 
         def apply_chages_all(tags_text: str, sort: bool, sort_by: str, sort_order: str):
@@ -325,8 +322,7 @@ class EditCaptionOfSelectedImageUI(UIBase):
                 self.rb_sort_by,
                 self.rb_sort_order,
             ],
-            outputs=o_update_filter_and_gallery,
-            _js="(a,b,c,d) => {gl_dataset_images_close(); return [a, b, c, d]}",
+            outputs=o_update_filter_and_gallery
         )
 
         self.cb_sort_caption_on_save.change(

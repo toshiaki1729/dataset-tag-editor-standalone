@@ -174,7 +174,7 @@ class BatchEditCaptionsUI(UIBase):
             outputs=o_update_filter_and_gallery,
         )
         self.btn_apply_edit_tags.click(
-            fn=None, _js="() => gl_dataset_images_close()"
+            fn=None, js="() => gl_dataset_images_close()"
         )
 
         def search_and_replace(
@@ -274,7 +274,7 @@ class BatchEditCaptionsUI(UIBase):
             outputs=o_update_filter_and_gallery,
         )
         self.btn_apply_sr_tags.click(
-            fn=None, _js="() => gl_dataset_images_close()"
+            fn=None, js="() => gl_dataset_images_close()"
         )
 
         def cb_show_only_tags_selected_changed(value: bool):

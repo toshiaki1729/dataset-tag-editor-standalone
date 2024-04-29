@@ -19,19 +19,19 @@ def create_components():
             elem = gr.Number(value=s, label=desc)
 
             def restore(value):
-                return gr.Number.update(value=value)
+                return gr.Number(value=value)
 
         elif ty is bool:
             elem = gr.Checkbox(value=s, label=desc)
 
             def restore(value):
-                return gr.Checkbox.update(value=value)
+                return gr.Checkbox(value=value)
 
         elif ty is str:
             elem = gr.Textbox(value=s, label=desc)
 
             def restore(value):
-                return gr.Textbox.update(value=value)
+                return gr.Textbox(value=value)
 
         else:
             raise NotImplementedError()
@@ -55,7 +55,6 @@ def on_ui_tabs():
 
     btn_reload.click(
         fn=request_restart,
-        _js="restart_reload",
         inputs=[],
         outputs=[],
     )

@@ -22,11 +22,6 @@ class FilterBySelectionUI(UIBase):
         return f"""Selected Image : {self.selected_path}"""
 
     def create_ui(self, image_columns: int):
-        with gr.Row(visible=False):
-            self.btn_hidden_set_selection_index = gr.Button(
-                elem_id="btn_hidden_set_selection_index"
-            )
-            self.nb_hidden_selection_image_index = gr.Number(value=-1)
         gr.HTML("""Select images from the left gallery.""")
 
         with gr.Column(variant="panel"):
@@ -40,8 +35,7 @@ class FilterBySelectionUI(UIBase):
                 )
 
             self.gl_filter_images = gr.Gallery(
-                label="Filter Images", elem_id="filter_gallery"
-            ).style(grid=image_columns)
+                label="Filter Images", elem_id="filter_gallery", columns=image_columns)
             self.txt_selection = gr.HTML(value=self.get_current_txt_selection())
 
             with gr.Row():
@@ -64,8 +58,8 @@ class FilterBySelectionUI(UIBase):
         get_filters: Callable[[], list[dte_module.filters.Filter]],
         update_filter_and_gallery: Callable[[], list],
     ):
-        def selection_index_changed(idx: int = -1):
-            idx = int(idx) if idx is not None else -1
+        def selection_index_changed(select: gr.SelectData):
+            idx = select.index if select.selected else -1
             img_paths = arrange_selection_order(self.tmp_selection)
             if idx < 0 or len(img_paths) <= idx:
                 self.selected_path = ""
@@ -73,14 +67,9 @@ class FilterBySelectionUI(UIBase):
             else:
                 self.selected_path = img_paths[idx]
             self.selected_index = idx
-            return [self.get_current_txt_selection(), idx]
-
-        self.btn_hidden_set_selection_index.click(
-            fn=selection_index_changed,
-            _js="(x) => gl_filter_images_selected_index()",
-            inputs=[self.nb_hidden_selection_image_index],
-            outputs=[self.txt_selection, self.nb_hidden_selection_image_index],
-        )
+            return self.get_current_txt_selection()
+        
+        self.gl_filter_images.select(fn=selection_index_changed, outputs=self.txt_selection)
 
         def add_image_selection():
             img_path = dataset_gallery.selected_path
@@ -131,16 +120,14 @@ class FilterBySelectionUI(UIBase):
                     dte_instance.images[p]
                     for p in arrange_selection_order(self.tmp_selection)
                 ],
-                self.get_current_txt_selection(),
-                -1,
+                self.get_current_txt_selection()
             ]
 
         self.btn_remove_image_selection.click(
             fn=remove_image_selection,
             outputs=[
                 self.gl_filter_images,
-                self.txt_selection,
-                self.nb_hidden_selection_image_index,
+                self.txt_selection
             ],
         )
 
@@ -148,14 +135,13 @@ class FilterBySelectionUI(UIBase):
             self.tmp_selection.clear()
             self.selected_path = ""
             self.selected_index = -1
-            return [[], self.get_current_txt_selection(), -1]
+            return [[], self.get_current_txt_selection()]
 
         self.btn_clear_image_selection.click(
             fn=clear_image_selection,
             outputs=[
                 self.gl_filter_images,
-                self.txt_selection,
-                self.nb_hidden_selection_image_index,
+                self.txt_selection
             ],
         )
 
@@ -168,7 +154,6 @@ class FilterBySelectionUI(UIBase):
             outputs=[
                 self.gl_filter_images,
                 self.txt_selection,
-                self.nb_hidden_selection_image_index,
             ]
             + o_update_filter_and_gallery,
         )
@@ -184,9 +169,6 @@ class FilterBySelectionUI(UIBase):
 
         self.btn_apply_image_selection_filter.click(
             fn=apply_image_selection_filter, outputs=o_update_filter_and_gallery
-        )
-        self.btn_apply_image_selection_filter.click(
-            fn=None, _js="() => gl_dataset_images_close()"
         )
 
 
