@@ -74,7 +74,7 @@ python scripts/launch.py [arguments]
 - タグまたはキャプション全体について一括置換ができます
   - [正規表現](https://docs.python.org/ja/3/library/re.html#regular-expression-syntax) が利用可能です
 - Interrogatorを使用してタグの追加や編集ができます
-  - BLIP、DeepDanbooru、[WDv1.4 Tagger](https://huggingface.co/SmilingWolf)の各ネットワークによる学習結果（v1, v2）が使用可能です
+  - BLIP、DeepDanbooru、[WDv1.4 Tagger](https://huggingface.co/SmilingWolf)の各ネットワークによる学習結果（v1, v2, v3）が使用可能です
 - 画像やキャプションファイルの一括移動・削除ができます
 
 
@@ -131,7 +131,7 @@ python scripts/launch.py [arguments]
   置換と同様の手順で、対象のタグを空欄に書き換えることで取り除けます。  
   共通のタグでない（一部の画像にのみ含まれる等）場合は、"Batch Edit Captions" タブにある "Remove" を利用することもできます。
 
-- **柔軟にタグを追加・削除・置換した**
+- **柔軟にタグを追加・削除・置換したい場合**
   1. "Batch Edit Captions" タブを開く
   2. "Use regex" にチェックを入れて "Search and Replace" する  
   ![](pic/ss10.png)  
@@ -141,7 +141,14 @@ python scripts/launch.py [arguments]
 
 
 ## トラブルシューティング
+### ギャラリーに画像が表示されず、コンソールにエラーが表示されない
+(おそらくv0.0.6以降)
+このプログラムのあるフォルダ以外から画像を読み込む場合は、"Settings" タブで、画像の読み取りを許可するフォルダを指定する、もしくは、下の項目と同様の方法で、サムネイル画像を一時保存するフォルダを指定してください。
+"Path whitelist to show images …" にパスを指定します。
+子フォルダに全て適用されるため、ドライブ名を"C:\"のように指定すると、Cドライブの全てに対して読み取りを許可します。
+
 ### ギャラリーに画像が表示されず、コンソールに "All files must contained within the Gradio python app working directory…" と出ている
+(おそらくv0.0.5以前)
 "Settings" タブで、サムネイル画像を一時保存するフォルダを指定してください。
 "Directory to save temporary files" にパスを指定して "Force using temporary file…" をチェックしてください。
 
