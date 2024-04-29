@@ -23,7 +23,7 @@ class TagFilterUI:
         self.prefix = False
         self.suffix = False
         self.regex = False
-        self.on_filter_update_callbacks = []
+        self.after_filter_update_callbacks = []
 
     def get_filter(self):
         return self.filter
@@ -88,10 +88,10 @@ class TagFilterUI:
             label="Filter Images by Tags", interactive=True
         )
 
-    def on_filter_update(
+    def after_filter_update(
         self, fn: Callable[[list], list], inputs=None, outputs=None, _js=None
     ):
-        self.on_filter_update_callbacks.append((fn, inputs, outputs, _js))
+        self.after_filter_update_callbacks.append((fn, inputs, outputs, _js))
 
     def set_callbacks(self):
         self.tb_search_tags.change(
@@ -120,13 +120,13 @@ class TagFilterUI:
         self.rb_logic.change(
             fn=self.rd_logic_changed, inputs=[self.rb_logic], outputs=[self.cbg_tags]
         )
-        for fn, inputs, outputs, _js in self.on_filter_update_callbacks:
-            self.rb_logic.change(fn=fn, inputs=inputs, outputs=outputs, _js=_js)
+        for fn, inputs, outputs, _js in self.after_filter_update_callbacks:
+            self.rb_logic.change(fn=lambda:None).then(fn=fn, inputs=inputs, outputs=outputs, _js=_js)
         self.cbg_tags.change(
             fn=self.cbg_tags_changed, inputs=[self.cbg_tags], outputs=[self.cbg_tags]
         )
-        for fn, inputs, outputs, _js in self.on_filter_update_callbacks:
-            self.cbg_tags.change(fn=fn, inputs=inputs, outputs=outputs, _js=_js)
+        for fn, inputs, outputs, _js in self.after_filter_update_callbacks:
+            self.cbg_tags.change(fn=lambda:None).then(fn=fn, inputs=inputs, outputs=outputs, _js=_js)
 
     def tb_search_tags_changed(self, tb_search_tags: str):
         self.filter_word = tb_search_tags
