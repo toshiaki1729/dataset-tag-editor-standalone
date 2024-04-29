@@ -49,7 +49,7 @@ INTERROGATORS = (
     + [tagger.DeepDanbooru()]
     + [
         tagger.WaifuDiffusion(name, threshold)
-        for name, threshold in WD_TAGGERS
+        for name, threshold in WD_TAGGERS.items()
     ]
 )
 INTERROGATOR_NAMES = [it.name() for it in INTERROGATORS]
