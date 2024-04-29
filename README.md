@@ -32,7 +32,7 @@ All requirements are listed in `requirements.txt`
 - [PyTorch](https://pytorch.org/) with CUDA >= 1.10.0 ([onnx-pytorch](https://github.com/fumihwh/onnx-pytorch) requirement; for [TorchDeepDanbooru](https://github.com/AUTOMATIC1111/TorchDeepDanbooru))  
 PyTorch version mostly depends on [transformers](https://github.com/huggingface/transformers), please follow [the instruction to install transformers](https://github.com/huggingface/transformers#installation) if install specific version manually.
 
-- [ONNX runtime](https://onnxruntime.ai/) (to use wd-taggers by SmilingWolf)
+- [ONNX runtime](https://onnxruntime.ai/) (to use wd-taggers by SmilingWolf, maybe installed automatically)
 
 If you want to use DirectML, please install manually in venv  (install [pytorch-directml](https://pypi.org/project/pytorch-directml/) to enable, **not tested**).
 
