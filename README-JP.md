@@ -42,9 +42,9 @@ DirectMLを使用する際は、venvに手動でインストールしてくだ�
 ### Linux (またはWindowsで手動でインストールするとき)
 このリポジトリのルートディレクトリで、以下のコマンドを実行してください。
 ```sh
-python -m venv --system-site-packages venv
-source ./venv/Scripts/activate
-pip install -r requirements.txt
+python3 -m venv --system-site-packages venv
+source ./venv/bin/activate
+pip3 install -r requirements.txt
 ```
 (Note: Windowsでのvenvの有効化は `.\venv\Scripts\activate` と読み替えてください。)
 
