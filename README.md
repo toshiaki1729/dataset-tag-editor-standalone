@@ -44,9 +44,9 @@ Just run `install.bat`
 ### Linux (or install manually on Windows)
 Run following commands on the root directory of this repo.
 ```sh
-python -m venv --system-site-packages venv
-source ./venv/Scripts/activate
-pip install -r requirements.txt
+python3 -m venv --system-site-packages venv
+source ./venv/bin/activate
+pip3 install -r requirements.txt
 ```
 (Note: just `.\venv\Scripts\activate` is needed to activate venv on Windows)
 
