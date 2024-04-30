@@ -63,6 +63,18 @@ source ./venv/bin/activate
 python scripts/launch.py [arguments]
 ```
 
+### Google Colab
+
+Google Colab users can using it by executing the following command and accessing the generated Gradio Public URL.  
+(Probably, I think this is currently only available in the Colab Pro.)
+
+```sh
+%cd /content
+!git clone https://github.com/toshiaki1729/dataset-tag-editor-standalone.git
+%cd /content/dataset-tag-editor-standalone
+!pip install -r requirements.txt
+!python scripts/launch.py --share
+```
 
 ## Features
 Note. "tag" means each blocks of caption separated by commas.
