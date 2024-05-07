@@ -1,4 +1,4 @@
-# Dataset Tag Editor Standalone (WIP)
+# Dataset Tag Editor Standalone
 
 [日本語 Readme](README-JP.md)
 
