@@ -1,6 +1,5 @@
 from PIL import Image
 import math
-from datasets import Dataset
 from transformers import pipeline
 import devices, settings
 from paths import paths

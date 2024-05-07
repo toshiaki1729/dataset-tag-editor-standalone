@@ -1,6 +1,5 @@
 from PIL import Image
 from typing import Optional, Generator, Any
-from datasets import Dataset
 
 import settings
 

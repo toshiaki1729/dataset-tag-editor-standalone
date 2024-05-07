@@ -3,8 +3,6 @@ import re, sys
 from typing import Optional
 from enum import Enum
 from PIL import Image
-import numpy as np
-from datasets import Dataset
 
 from singleton import Singleton
 
