@@ -233,6 +233,7 @@ class EditCaptionOfSelectedImageUI(UIBase):
             threshold_booru: float,
             use_threshold_waifu: bool,
             threshold_waifu: float,
+            threshold_z3d: float,
         ):
             if not interrogator_name:
                 return ""
@@ -245,6 +246,7 @@ class EditCaptionOfSelectedImageUI(UIBase):
                 interrogator_name,
                 threshold_booru,
                 threshold_waifu,
+                threshold_z3d,
             )
 
         self.btn_interrogate_si.click(
@@ -254,6 +256,7 @@ class EditCaptionOfSelectedImageUI(UIBase):
                 load_dataset.sl_custom_threshold_booru,
                 load_dataset.cb_use_custom_threshold_waifu,
                 load_dataset.sl_custom_threshold_waifu,
+                load_dataset.sl_custom_threshold_z3d,
             ],
             outputs=[self.tb_interrogate],
         )

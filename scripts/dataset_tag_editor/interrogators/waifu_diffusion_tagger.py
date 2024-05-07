@@ -7,10 +7,10 @@ from paths import paths
 
 class WaifuDiffusionTagger:
     # brought from https://huggingface.co/spaces/SmilingWolf/wd-v1-4-tags/blob/main/app.py and modified
-    MODEL_FILENAME = "model.onnx"
-    LABEL_FILENAME = "selected_tags.csv"
 
-    def __init__(self, model_name):
+    def __init__(self, model_name, model_filename="model.onnx", label_filename="selected_tags.csv"):
+        self.MODEL_FILENAME = model_filename
+        self.LABEL_FILENAME = label_filename
         self.MODEL_REPO = model_name
         self.model = None
         self.labels = []

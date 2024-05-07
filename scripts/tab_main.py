@@ -215,6 +215,7 @@ def on_ui_tabs():
             ui.load_dataset.sl_custom_threshold_booru,
             ui.load_dataset.cb_use_custom_threshold_waifu,
             ui.load_dataset.sl_custom_threshold_waifu,
+            ui.load_dataset.sl_custom_threshold_z3d,
             ui.toprow.cb_save_kohya_metadata,
             ui.toprow.tb_metadata_output,
             ui.toprow.tb_metadata_input,
