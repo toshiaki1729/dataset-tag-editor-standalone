@@ -78,6 +78,15 @@ class LoadDatasetUI(UIBase):
                         label="Booru Score Threshold",
                     )
                 with gr.Row():
+                    self.sl_custom_threshold_z3d = gr.Slider(
+                        minimum=0,
+                        maximum=1,
+                        value=cfg_general.custom_threshold_z3d,
+                        step=0.01,
+                        interactive=True,
+                        label="Z3D-E621 Score Threshold",
+                    )
+                with gr.Row():
                     self.cb_use_custom_threshold_waifu = gr.Checkbox(
                         value=cfg_general.use_custom_threshold_waifu,
                         label="Use Custom Threshold (WDv1.4 Tagger)",
@@ -113,6 +122,7 @@ class LoadDatasetUI(UIBase):
             custom_threshold_booru: float,
             use_custom_threshold_waifu: bool,
             custom_threshold_waifu: float,
+            custom_threshold_z3d: float,
             use_kohya_metadata: bool,
             kohya_json_path: str,
         ):
@@ -128,6 +138,7 @@ class LoadDatasetUI(UIBase):
 
             threshold_booru = custom_threshold_booru
             threshold_waifu = custom_threshold_waifu if use_custom_threshold_waifu else -1
+            threshold_z3d = custom_threshold_z3d
 
             dte_instance.load_dataset(
                 dir,
@@ -139,6 +150,7 @@ class LoadDatasetUI(UIBase):
                 use_interrogator_names,
                 threshold_booru,
                 threshold_waifu,
+                threshold_z3d,
                 settings.current.use_temp_files,
                 kohya_json_path if use_kohya_metadata else None,
                 settings.current.max_resolution
@@ -163,6 +175,7 @@ class LoadDatasetUI(UIBase):
                 self.sl_custom_threshold_booru,
                 self.cb_use_custom_threshold_waifu,
                 self.sl_custom_threshold_waifu,
+                self.sl_custom_threshold_z3d,
                 toprow.cb_save_kohya_metadata,
                 toprow.tb_metadata_output,
             ],

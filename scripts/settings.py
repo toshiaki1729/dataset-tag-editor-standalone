@@ -17,6 +17,7 @@ class Settings(NamedTuple):
     interrogator_keep_in_memory: bool = False
     interrogator_max_length: int = 30
     interrogator_model_dir: str = ""
+    tagger_use_rating: bool = False
     num_cpu_worker: int = -1
 
 
@@ -39,6 +40,7 @@ DESCRIPTIONS = {
     "interrogator_keep_in_memory": "Keep interroagor in VRAM",
     "interrogator_max_length": "Maximum text length for interrogator (for GIT only)",
     "interrogator_model_dir": "Path to directory for downloaded interrogator models",
+    "tagger_use_rating": "Use Rating tags when using Tagger",
     "num_cpu_worker": "Number of CPU workers when preprocessing images on interrogating (set -1 to auto)",
 }
 

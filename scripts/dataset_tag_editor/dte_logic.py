@@ -94,16 +94,17 @@ class DatasetTagEditor(Singleton):
             [taggers_builtin.BLIP()]
             + [taggers_builtin.BLIP2(name) for name in self.BLIP2_CAPTIONING_NAMES]
             + [taggers_builtin.GITLarge()]
-            + [taggers_builtin.DeepDanbooru()]
+            + [taggers_builtin.DeepDanbooru(settings.current.tagger_use_rating)]
             + [
-                taggers_builtin.WaifuDiffusion(name, threshold)
+                taggers_builtin.WaifuDiffusion(name, threshold, settings.current.tagger_use_rating)
                 for name, threshold in self.WD_TAGGERS.items()
             ]
+            + [taggers_builtin.Z3D_E621()]
             + [cls_tagger() for cls_tagger in custom_taggers]
         )
         self.INTERROGATOR_NAMES = [it.name() for it in self.INTERROGATORS]
     
-    def interrogate_image(self, path: str, interrogator_name: str, threshold_booru, threshold_wd):
+    def interrogate_image(self, path: str, interrogator_name: str, threshold_booru, threshold_wd, threshold_z3d):
         try:
             img = Image.open(path).convert("RGB")
         except:
@@ -117,6 +118,9 @@ class DatasetTagEditor(Singleton):
                     elif isinstance(it, taggers_builtin.WaifuDiffusion):
                         with it as tg:
                             res = tg.predict(img, threshold_wd)
+                    elif isinstance(it, taggers_builtin.Z3D_E621):
+                        with it as tg:
+                            res = tg.predict(img, threshold_z3d)
                     else:
                         with it as cap:
                             res = cap.predict(img)
@@ -661,6 +665,7 @@ class DatasetTagEditor(Singleton):
         interrogator_names: list[str],
         threshold_booru: float,
         threshold_waifu: float,
+        threshold_z3d: float,
         use_temp_dir: bool,
         kohya_json_path: Optional[str], 
         max_res:float
@@ -745,6 +750,8 @@ class DatasetTagEditor(Singleton):
                         tagger_thresholds.append((it, threshold_booru))
                     elif isinstance(it, taggers_builtin.WaifuDiffusion):
                         tagger_thresholds.append((it, threshold_waifu))
+                    elif isinstance(it, taggers_builtin.Z3D_E621):
+                        tagger_thresholds.append((it, threshold_z3d))
                     else:
                         tagger_thresholds.append((it, None))
 
@@ -756,8 +763,8 @@ class DatasetTagEditor(Singleton):
             imgpaths, self.images = load_images(filepaths)
             taglists = load_captions(imgpaths)
         
+        interrogate_tags = {img_path : [] for img_path in imgpaths}
         if interrogate_method != self.InterrogateMethod.NONE:
-            interrogate_tags = {img_path : [] for img_path in imgpaths}
             for tg, th in tagger_thresholds:
                 use_pipe = True
                 tg.start()
