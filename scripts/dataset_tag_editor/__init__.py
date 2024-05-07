@@ -1,17 +1,13 @@
-from . import tagger
-from . import captioning
+from . import taggers_builtin
 from . import filters
 from . import dataset as ds
 
-from .dte_logic import DatasetTagEditor, INTERROGATOR_NAMES, interrogate_image
+from .dte_logic import DatasetTagEditor
 
 __all__ = [
     "ds",
-    "tagger",
-    "captioning",
+    "taggers_builtin",
     "filters",
     "kohya_metadata",
-    "INTERROGATOR_NAMES",
-    "interrogate_image",
-    "DatasetTagEditor",
+    "DatasetTagEditor"
 ]
