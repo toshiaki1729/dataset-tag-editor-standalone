@@ -4,6 +4,8 @@ from typing import Optional
 from enum import Enum
 from PIL import Image
 
+from tqdm import tqdm
+
 from singleton import Singleton
 
 import settings, logger
@@ -765,6 +767,7 @@ class DatasetTagEditor(Singleton):
         
         interrogate_tags = {img_path : [] for img_path in imgpaths}
         if interrogate_method != self.InterrogateMethod.NONE:
+            logger.write("Preprocess images...")
             def gen_data():
                 for img_path in imgpaths:
                     yield self.images.get(img_path)
@@ -777,7 +780,7 @@ class DatasetTagEditor(Singleton):
             p = Pool(pool_size)
             result = p.map(convert_rgb, gen_data())
             
-            for tg, th in tagger_thresholds:
+            for tg, th in tqdm(tagger_thresholds):
                 use_pipe = True
                 tg.start()
 
@@ -791,10 +794,10 @@ class DatasetTagEditor(Singleton):
                     continue
                 try:
                     if use_pipe:
-                        for img_path, tags in zip(imgpaths, tg.predict_pipe(result, th)):
+                        for img_path, tags in  tqdm(zip(imgpaths, tg.predict_pipe(result, th)), desc=tg.name(), total=len(data)):
                             interrogate_tags[img_path] += tags
                     else:
-                        for img_path, data in zip(imgpaths, result):
+                        for img_path, data in tqdm(zip(imgpaths, result), desc=tg.name(), total=len(imgpaths)):
                             interrogate_tags[img_path] += tg.predict(data, th)
                 except Exception as e:
                     tb = sys.exc_info()[2]

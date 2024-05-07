@@ -5,3 +5,4 @@ pillow
 numpy
 torch>=1.10.0
 torchvision
+tqdm
