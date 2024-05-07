@@ -62,8 +62,8 @@ class DatasetTagEditor(Singleton):
         
     def load_interrogators(self):
         custom_tagger_scripts = CustomScripts(paths.userscript_path / "taggers")
-        custom_taggers = custom_tagger_scripts.load_derived_classes(Tagger)
-        logger.write(f"Custom taggers loaded: {custom_taggers}")
+        custom_taggers:list[Tagger] = custom_tagger_scripts.load_derived_classes(Tagger)
+        logger.write(f"Custom taggers loaded: {[tagger().name() for tagger in custom_taggers]}")
 
         self.BLIP2_CAPTIONING_NAMES = [
             "blip2-opt-2.7b",
