@@ -18,6 +18,8 @@ DeepBooru interrogator で生成したような、カンマ区切り形式のキ
 - gradioの特定のバージョンに起因するバグの回避
 - 起動と動作がより早く
 - キャプション作成のためのインタロゲーターの追加 ([GIT](https://huggingface.co/docs/transformers/model_doc/git) ([paper (arXiv)](https://arxiv.org/abs/2205.14100)), [BLIP-2](https://huggingface.co/docs/transformers/model_doc/blip-2) ([paper (arXiv)](https://arxiv.org/abs/2301.12597)): こちらは大変重いです)
+- お好みのTaggerを `userscripts/taggers` に追加できます (`scripts.tagger.Tagger`を継承したクラスでラップしてください)
+  - 当該フォルダにAesthetic Scoreに基づいたTaggerをいくつか実装しています
 
 (Cons)
 - SD webUI用に改造されたCLIPが使えません (TIや強調などの機能)
@@ -158,6 +160,7 @@ Google Colabユーザーは、以下のコマンドを実行し、生成され�
 このプログラムのあるフォルダ以外から画像を読み込む場合は、"Settings" タブで、画像の読み取りを許可するフォルダを指定する、もしくは、下の項目と同様の方法で、サムネイル画像を一時保存するフォルダを指定してください。  
 "Path whitelist to show images …" にパスを指定します。  
 子フォルダに全て適用されるため、ドライブ名を"C:\\"のように指定すると、Cドライブの全てに対して読み取りを許可します。  
+![](pic/ss11.png) 
 
 ### ギャラリーに画像が表示されず、コンソールに "All files must contained within the Gradio python app working directory…" と出ている
 (おそらくv0.0.5以前)  
