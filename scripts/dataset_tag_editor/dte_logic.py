@@ -765,6 +765,18 @@ class DatasetTagEditor(Singleton):
         
         interrogate_tags = {img_path : [] for img_path in imgpaths}
         if interrogate_method != self.InterrogateMethod.NONE:
+            def gen_data():
+                for img_path in imgpaths:
+                    yield self.images.get(img_path)
+            pool_size = settings.current.num_cpu_worker
+            if pool_size < 0:
+                import os
+                pool_size = os.cpu_count() + 1
+            
+            from multiprocessing import Pool
+            p = Pool(pool_size)
+            result = p.map(convert_rgb, gen_data())
+            
             for tg, th in tagger_thresholds:
                 use_pipe = True
                 tg.start()
@@ -778,17 +790,6 @@ class DatasetTagEditor(Singleton):
                     logger.error(e.with_traceback(tb))
                     continue
                 try:
-                    def gen_data():
-                        for img_path in imgpaths:
-                            yield self.images.get(img_path)
-                    pool_size = settings.current.num_cpu_worker
-                    if pool_size < 0:
-                        import os
-                        pool_size = os.cpu_count() + 1
-                    
-                    from multiprocessing import Pool
-                    p = Pool(pool_size)
-                    result = p.map(convert_rgb, gen_data())
                     if use_pipe:
                         for img_path, tags in zip(imgpaths, tg.predict_pipe(result, th)):
                             interrogate_tags[img_path] += tags
