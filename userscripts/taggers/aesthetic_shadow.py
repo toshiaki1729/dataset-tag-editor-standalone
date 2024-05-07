@@ -40,7 +40,7 @@ class AestheticShadowV2(Tagger):
     def predict_pipe(self, data: list[Image.Image], threshold=None):
         if data is None:
             return
-        for out in self.pipe_aesthetic(data):
+        for out in self.pipe_aesthetic(data, batch_size=BATCH_SIZE):
             yield self._get_score(out)
 
     def name(self):

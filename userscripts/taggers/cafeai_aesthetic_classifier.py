@@ -8,7 +8,7 @@ from scripts.tagger import Tagger
 
 # brought and modified from https://huggingface.co/spaces/cafeai/cafe_aesthetic_demo/blob/main/app.py
 
-BATCH_SIZE = 8
+BATCH_SIZE = 32
 
 class CafeAIAesthetic(Tagger):
     def load(self):
@@ -41,7 +41,7 @@ class CafeAIAesthetic(Tagger):
     def predict_pipe(self, data: list[Image.Image], threshold=None):
         if data is None:
             return
-        for out in self.pipe_aesthetic(data):
+        for out in self.pipe_aesthetic(data, batch_size=BATCH_SIZE):
             yield self._get_score(out)
 
     def name(self):
