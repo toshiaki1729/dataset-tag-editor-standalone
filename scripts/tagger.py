@@ -20,14 +20,15 @@ class Tagger:
         pass
 
     # predict tags of one image
-    def predict(self, image: Image.Image, threshold: Optional[float]) -> list[str]:
+    def predict(self, image: Image.Image, threshold: Optional[float] = None) -> list[str]:
         raise NotImplementedError()
     
     # Please implement if you want to use more efficient data loading system
     # None input will come to check if this function is implemented
-    def predict_pipe(self, data: list[Image.Image], threshold: Optional[float]) -> Generator[list[str], Any, None]:
+    def predict_pipe(self, data: list[Image.Image], threshold: Optional[float] = None) -> Generator[list[str], Any, None]:
         raise NotImplementedError()
 
+    # Visible name in UI
     def name(self):
         raise NotImplementedError()
 

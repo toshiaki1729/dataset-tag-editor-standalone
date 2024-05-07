@@ -783,10 +783,10 @@ class DatasetTagEditor(Singleton):
                     p = Pool(pool_size)
                     result = p.map(convert_rgb, gen_data())
                     if use_pipe:
-                        for img_path, tags in zip(imgpaths, tg.predict_pipe(result.copy(), th)):
+                        for img_path, tags in zip(imgpaths, tg.predict_pipe(result, th)):
                             interrogate_tags[img_path] += tags
                     else:
-                        for data in result:
+                        for img_path, data in zip(imgpaths, result):
                             interrogate_tags[img_path] += tg.predict(data, th)
                 except Exception as e:
                     tb = sys.exc_info()[2]
