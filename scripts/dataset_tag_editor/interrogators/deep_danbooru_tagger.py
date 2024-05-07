@@ -2,8 +2,9 @@ from PIL import Image
 import numpy as np
 import torch
 
-import settings, devices, utilities, paths
-from . import deepbooru_model, model_loader
+import settings, devices, utilities, model_loader
+from paths import paths
+from . import deepbooru_model
 
 
 class DepDanbooruTagger:

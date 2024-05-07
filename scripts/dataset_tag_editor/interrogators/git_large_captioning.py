@@ -1,5 +1,6 @@
 from transformers import AutoProcessor, AutoModelForCausalLM
-import devices, settings, paths
+import devices, settings
+from paths import paths
 
 
 # brought from https://huggingface.co/docs/transformers/main/en/model_doc/git and modified

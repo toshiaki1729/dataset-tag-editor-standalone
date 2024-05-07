@@ -13,8 +13,10 @@ import gradio as gr
 import gradio.routes
 import gradio.utils
 
+from dte_instance import dte_instance
 
-import tab_main, tab_settings, cmd_args, settings, utilities, logger, launch, paths
+import tab_main, tab_settings, cmd_args, utilities, logger, launch, settings
+import paths
 from shared_state import state
 
 
@@ -218,9 +220,9 @@ def main():
 
     while True:
         state.begin()
-
+        
         settings.load()
-        paths.initialize()
+        paths.paths = paths.Paths()
 
         state.temp_dir = (utilities.base_dir_path() / "temp").absolute()
         if settings.current.use_temp_files and settings.current.temp_directory != "":
@@ -238,6 +240,8 @@ def main():
 
         if settings.current.cleanup_tmpdir:
             cleanup_tmpdr()
+
+        dte_instance.load_interrogators()
 
         interface = create_ui().queue(64)
 

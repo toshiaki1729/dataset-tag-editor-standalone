@@ -1,6 +1,7 @@
 from transformers import BlipProcessor, BlipForConditionalGeneration
 
-import devices, settings, paths
+import devices, settings
+from paths import paths
 
 
 class BLIPLargeCaptioning:

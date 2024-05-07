@@ -1,7 +1,7 @@
 from typing import get_type_hints
 import gradio as gr
 
-import settings, shared_state
+import settings
 
 
 setting_inputs = {}

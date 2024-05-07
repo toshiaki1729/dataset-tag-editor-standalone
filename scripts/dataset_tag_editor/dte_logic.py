@@ -1,83 +1,33 @@
 from pathlib import Path
-import re
+import re, sys
 from typing import Optional
 from enum import Enum
 from PIL import Image
+import numpy as np
+from datasets import Dataset
 
 from singleton import Singleton
 
+import settings, logger
+from paths import paths
+sys.path = [str(paths.base_path)] + sys.path
+
 from . import (
-    tagger,
-    captioning,
     filters,
     dataset as ds,
     kohya_finetune_metadata as kohya_metadata,
+    taggers_builtin
 )
+from .custom_scripts import CustomScripts
 from tokenizer import clip_tokenizer
-
-import settings, logger
-
-BLIP2_CAPTIONING_NAMES = [
-    "blip2-opt-2.7b",
-    "blip2-opt-2.7b-coco",
-    "blip2-opt-6.7b",
-    "blip2-opt-6.7b-coco",
-    "blip2-flan-t5-xl",
-    "blip2-flan-t5-xl-coco",
-    "blip2-flan-t5-xxl",
-]
-
-WD_TAGGERS = {
-    "wd-v1-4-vit-tagger" : 0.35,
-    "wd-v1-4-convnext-tagger" : 0.35,
-    "wd-v1-4-vit-tagger-v2" : 0.3537,
-    "wd-v1-4-convnext-tagger-v2" : 0.3685,
-    "wd-v1-4-convnextv2-tagger-v2" : 0.371,
-    "wd-v1-4-swinv2-tagger-v2" : 0.3771,
-    "wd-v1-4-moat-tagger-v2" : 0.3771,
-    "wd-vit-tagger-v3" : 0.2614,
-    "wd-convnext-tagger-v3" : 0.2682,
-    "wd-swinv2-tagger-v3" : 0.2653,
-}
-# {tagger name : default tagger threshold}
-# v1: idk if it's okay  v2: P=R thresholds on each repo https://huggingface.co/SmilingWolf
-
-INTERROGATORS = (
-    [captioning.BLIP()]
-    + [captioning.BLIP2(name) for name in BLIP2_CAPTIONING_NAMES]
-    + [captioning.GITLarge()]
-    + [tagger.DeepDanbooru()]
-    + [
-        tagger.WaifuDiffusion(name, threshold)
-        for name, threshold in WD_TAGGERS.items()
-    ]
-)
-INTERROGATOR_NAMES = [it.name() for it in INTERROGATORS]
+from tagger import Tagger
 
 re_tags = re.compile(r"^([\s\S]+?)( \[\d+\])?$")
 re_newlines = re.compile(r"[\r\n]+")
 re_numbers_at_start = re.compile(r"^[-\d]+\s*")
 
-
-def interrogate_image(path: str, interrogator_name: str, threshold_booru, threshold_wd):
-    try:
-        img = Image.open(path).convert("RGB")
-    except:
-        return ""
-    else:
-        for it in INTERROGATORS:
-            if it.name() == interrogator_name:
-                if isinstance(it, tagger.DeepDanbooru):
-                    with it as tg:
-                        res = tg.predict(img, threshold_booru)
-                elif isinstance(it, tagger.WaifuDiffusion):
-                    with it as tg:
-                        res = tg.predict(img, threshold_wd)
-                else:
-                    with it as cap:
-                        res = cap.predict(img)
-        return ", ".join(res)
-
+def convert_rgb(data:Image.Image):
+    return data.convert("RGB")
 
 class DatasetTagEditor(Singleton):
     class SortBy(Enum):
@@ -96,7 +46,7 @@ class DatasetTagEditor(Singleton):
         OVERWRITE = 2
         PREPEND = 3
         APPEND = 4
-
+    
     def __init__(self):
         # from modules.textual_inversion.dataset
         self.re_word = (
@@ -111,6 +61,68 @@ class DatasetTagEditor(Singleton):
         self.images = {}
         self.tag_tokens = {}
         self.raw_clip_token_used = None
+        
+    def load_interrogators(self):
+        custom_tagger_scripts = CustomScripts(paths.userscript_path / "taggers")
+        custom_taggers = custom_tagger_scripts.load_derived_classes(Tagger)
+        logger.write(f"Custom taggers loaded: {custom_taggers}")
+
+        self.BLIP2_CAPTIONING_NAMES = [
+            "blip2-opt-2.7b",
+            "blip2-opt-2.7b-coco",
+            "blip2-opt-6.7b",
+            "blip2-opt-6.7b-coco",
+            "blip2-flan-t5-xl",
+            "blip2-flan-t5-xl-coco",
+            "blip2-flan-t5-xxl",
+        ]
+
+        self.WD_TAGGERS = {
+            "wd-v1-4-vit-tagger" : 0.35,
+            "wd-v1-4-convnext-tagger" : 0.35,
+            "wd-v1-4-vit-tagger-v2" : 0.3537,
+            "wd-v1-4-convnext-tagger-v2" : 0.3685,
+            "wd-v1-4-convnextv2-tagger-v2" : 0.371,
+            "wd-v1-4-swinv2-tagger-v2" : 0.3771,
+            "wd-v1-4-moat-tagger-v2" : 0.3771,
+            "wd-vit-tagger-v3" : 0.2614,
+            "wd-convnext-tagger-v3" : 0.2682,
+            "wd-swinv2-tagger-v3" : 0.2653,
+        }
+        # {tagger name : default tagger threshold}
+        # v1: idk if it's okay  v2: P=R thresholds on each repo https://huggingface.co/SmilingWolf
+
+        self.INTERROGATORS = (
+            [taggers_builtin.BLIP()]
+            + [taggers_builtin.BLIP2(name) for name in self.BLIP2_CAPTIONING_NAMES]
+            + [taggers_builtin.GITLarge()]
+            + [taggers_builtin.DeepDanbooru()]
+            + [
+                taggers_builtin.WaifuDiffusion(name, threshold)
+                for name, threshold in self.WD_TAGGERS.items()
+            ]
+            + [cls_tagger() for cls_tagger in custom_taggers]
+        )
+        self.INTERROGATOR_NAMES = [it.name() for it in self.INTERROGATORS]
+    
+    def interrogate_image(self, path: str, interrogator_name: str, threshold_booru, threshold_wd):
+        try:
+            img = Image.open(path).convert("RGB")
+        except:
+            return ""
+        else:
+            for it in self.INTERROGATORS:
+                if it.name() == interrogator_name:
+                    if isinstance(it, taggers_builtin.DeepDanbooru):
+                        with it as tg:
+                            res = tg.predict(img, threshold_booru)
+                    elif isinstance(it, taggers_builtin.WaifuDiffusion):
+                        with it as tg:
+                            res = tg.predict(img, threshold_wd)
+                    else:
+                        with it as cap:
+                            res = cap.predict(img)
+            return ", ".join(res)
 
     def get_tag_list(self):
         if len(self.tag_counts) == 0:
@@ -726,69 +738,73 @@ class DatasetTagEditor(Singleton):
                 taglists.append(caption_tags)
 
             return taglists
-
-        try:
-            captionings = []
-            taggers = []
-            if interrogate_method != self.InterrogateMethod.NONE:
-                for it in INTERROGATORS:
-                    if it.name() in interrogator_names:
-                        it.start()
-                        if isinstance(it, tagger.Tagger):
-                            if isinstance(it, tagger.DeepDanbooru):
-                                taggers.append((it, threshold_booru))
-                            if isinstance(it, tagger.WaifuDiffusion):
-                                taggers.append((it, threshold_waifu))
-                        elif isinstance(it, captioning.Captioning):
-                            captionings.append(it)
-
-            if kohya_json_path:
-                imgpaths, self.images, taglists = kohya_metadata.read(
-                    img_dir, kohya_json_path, use_temp_dir
-                )
-            else:
-                imgpaths, self.images = load_images(filepaths)
-                taglists = load_captions(imgpaths)
-
-            for img_path, tags in zip(imgpaths, taglists):
-                interrogate_tags = []
-                img = self.images.get(img_path)
-                if interrogate_method != self.InterrogateMethod.NONE and (
-                    (interrogate_method != self.InterrogateMethod.PREFILL)
-                    or (
-                        interrogate_method == self.InterrogateMethod.PREFILL
-                        and not tags
-                    )
-                ):
-                    if img is None:
-                        logger.error(
-                            f"Failed to load image {img_path}. Interrogating is aborted."
-                        )
+        
+        tagger_thresholds:list[tuple[Tagger, float]] = []
+        if interrogate_method != self.InterrogateMethod.NONE:
+            for it in self.INTERROGATORS:
+                if it.name() in interrogator_names:
+                    if isinstance(it, taggers_builtin.DeepDanbooru):
+                        tagger_thresholds.append((it, threshold_booru))
+                    elif isinstance(it, taggers_builtin.WaifuDiffusion):
+                        tagger_thresholds.append((it, threshold_waifu))
                     else:
-                        img = img.convert("RGB")
-                        for cap in captionings:
-                            interrogate_tags += cap.predict(img)
+                        tagger_thresholds.append((it, None))
 
-                        for tg, threshold in taggers:
-                            interrogate_tags += [
-                                t for t in tg.predict(img, threshold).keys()
-                            ]
+        if kohya_json_path:
+            imgpaths, self.images, taglists = kohya_metadata.read(
+                img_dir, kohya_json_path, use_temp_dir
+            )
+        else:
+            imgpaths, self.images = load_images(filepaths)
+            taglists = load_captions(imgpaths)
+        
+        if interrogate_method != self.InterrogateMethod.NONE:
+            interrogate_tags = {img_path : [] for img_path in imgpaths}
+            for tg, th in tagger_thresholds:
+                use_pipe = True
+                tg.start()
 
-                if interrogate_method == self.InterrogateMethod.OVERWRITE:
-                    tags = interrogate_tags
-                elif interrogate_method == self.InterrogateMethod.PREPEND:
-                    tags = interrogate_tags + tags
-                else:
-                    tags = tags + interrogate_tags
-
-                self.set_tags_by_image_path(img_path, tags)
-
-        finally:
-            if interrogate_method != self.InterrogateMethod.NONE:
-                for cap in captionings:
-                    cap.stop()
-                for tg, _ in taggers:
+                try:
+                    tg.predict_pipe(None)
+                except NotImplementedError:
+                    use_pipe = False
+                except Exception as e:
+                    tb = sys.exc_info()[2]
+                    logger.error(e.with_traceback(tb))
+                    continue
+                try:
+                    def gen_data():
+                        for img_path in imgpaths:
+                            yield self.images.get(img_path)
+                    pool_size = settings.current.num_cpu_worker
+                    if pool_size < 0:
+                        import os
+                        pool_size = os.cpu_count() + 1
+                    
+                    from multiprocessing import Pool
+                    p = Pool(pool_size)
+                    result = p.map(convert_rgb, gen_data())
+                    if use_pipe:
+                        for img_path, tags in zip(imgpaths, tg.predict_pipe(result.copy(), th)):
+                            interrogate_tags[img_path] += tags
+                    else:
+                        for data in result:
+                            interrogate_tags[img_path] += tg.predict(data, th)
+                except Exception as e:
+                    tb = sys.exc_info()[2]
+                    logger.error(e.with_traceback(tb))
+                finally:
                     tg.stop()
+        
+        for img_path, tags in zip(imgpaths, taglists):
+            if (interrogate_method == self.InterrogateMethod.PREFILL and not tags) or (interrogate_method == self.InterrogateMethod.OVERWRITE):
+                tags = interrogate_tags[img_path]
+            elif interrogate_method == self.InterrogateMethod.PREPEND:
+                tags = interrogate_tags[img_path] + tags
+            else:
+                tags = tags + interrogate_tags[img_path]
+
+            self.set_tags_by_image_path(img_path, tags)
 
         for i, p in enumerate(sorted(self.dataset.datas.keys())):
             self.img_idx[p] = i

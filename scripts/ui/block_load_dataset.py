@@ -9,9 +9,6 @@ from .uibase import UIBase
 if TYPE_CHECKING:
     from .ui_classes import *
 
-INTERROGATOR_NAMES = dte_module.INTERROGATOR_NAMES
-InterrogateMethod = dte_instance.InterrogateMethod
-
 
 class LoadDatasetUI(UIBase):
     def __init__(self):
@@ -65,7 +62,7 @@ class LoadDatasetUI(UIBase):
                         )
                         self.dd_intterogator_names = gr.Dropdown(
                             label="Interrogators",
-                            choices=INTERROGATOR_NAMES,
+                            choices=dte_instance.INTERROGATOR_NAMES,
                             value=cfg_general.use_interrogator_names,
                             interactive=True,
                             multiselect=True,
@@ -119,15 +116,15 @@ class LoadDatasetUI(UIBase):
             use_kohya_metadata: bool,
             kohya_json_path: str,
         ):
-            interrogate_method = InterrogateMethod.NONE
+            interrogate_method = dte_instance.InterrogateMethod.NONE
             if use_interrogator == "If Empty":
-                interrogate_method = InterrogateMethod.PREFILL
+                interrogate_method = dte_instance.InterrogateMethod.PREFILL
             elif use_interrogator == "Overwrite":
-                interrogate_method = InterrogateMethod.OVERWRITE
+                interrogate_method = dte_instance.InterrogateMethod.OVERWRITE
             elif use_interrogator == "Prepend":
-                interrogate_method = InterrogateMethod.PREPEND
+                interrogate_method = dte_instance.InterrogateMethod.PREPEND
             elif use_interrogator == "Append":
-                interrogate_method = InterrogateMethod.APPEND
+                interrogate_method = dte_instance.InterrogateMethod.APPEND
 
             threshold_booru = custom_threshold_booru
             threshold_waifu = custom_threshold_waifu if use_custom_threshold_waifu else -1

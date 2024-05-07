@@ -1,5 +1,6 @@
 gradio==4.28.3
 transformers>=4.27.4
+datasets
 requests
 pillow
 numpy

@@ -17,6 +17,7 @@ class Settings(NamedTuple):
     interrogator_keep_in_memory: bool = False
     interrogator_max_length: int = 30
     interrogator_model_dir: str = ""
+    num_cpu_worker: int = -1
 
 
 DEFAULT = Settings()
@@ -38,6 +39,7 @@ DESCRIPTIONS = {
     "interrogator_keep_in_memory": "Keep interroagor in VRAM",
     "interrogator_max_length": "Maximum text length for interrogator (for GIT only)",
     "interrogator_model_dir": "Path to directory for downloaded interrogator models",
+    "num_cpu_worker": "Number of CPU workers when preprocessing images on interrogating (set -1 to auto)",
 }
 
 
@@ -52,6 +54,7 @@ def load():
         settings = DEFAULT._asdict() | json.loads(SETTING_PATH.read_text("utf8"))
     else:
         settings = DEFAULT._asdict()
+    settings = {key:value for key,value in settings.items() if key in DEFAULT._asdict()}
     current = Settings(**settings)
 
 

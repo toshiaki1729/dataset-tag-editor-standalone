@@ -2,10 +2,8 @@ from PIL import Image
 import numpy as np
 from typing import Tuple
 
-import settings
-import devices as devices
-import launch, utilities, paths
-
+import launch, utilities, settings, devices
+from paths import paths
 
 class WaifuDiffusionTagger:
     # brought from https://huggingface.co/spaces/SmilingWolf/wd-v1-4-tags/blob/main/app.py and modified

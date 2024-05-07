@@ -50,7 +50,7 @@ class EditCaptionOfSelectedImageUI(UIBase):
             with gr.Row():
                 self.dd_intterogator_names_si = gr.Dropdown(
                     label="Interrogator",
-                    choices=dte_module.INTERROGATOR_NAMES,
+                    choices=dte_instance.INTERROGATOR_NAMES,
                     value=cfg_edit_selected.use_interrogator_name,
                     interactive=True,
                     multiselect=False,
@@ -240,7 +240,7 @@ class EditCaptionOfSelectedImageUI(UIBase):
                 threshold_booru
             )
             threshold_waifu = threshold_waifu if use_threshold_waifu else -1
-            return dte_module.interrogate_image(
+            return dte_instance.interrogate_image(
                 dataset_gallery.selected_path,
                 interrogator_name,
                 threshold_booru,

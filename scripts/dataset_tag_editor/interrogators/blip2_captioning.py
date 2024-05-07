@@ -1,6 +1,7 @@
 from transformers import Blip2Processor, Blip2ForConditionalGeneration
 
-import devices, settings, paths
+import devices, settings
+from paths import paths
 
 
 class BLIP2Captioning:
