@@ -17,6 +17,8 @@ Caption in the filenames of images can be loaded, but edited captions can only b
 - Avoid bugs caused by specific version of gradio
 - Much faster startup and running
 - More captioning interrogators ([GIT](https://huggingface.co/docs/transformers/model_doc/git) ([paper (arXiv)](https://arxiv.org/abs/2205.14100)), [BLIP-2](https://huggingface.co/docs/transformers/model_doc/blip-2) ([paper (arXiv)](https://arxiv.org/abs/2301.12597)): may extremely heavy)
+- You can add Custom Tagger in `userscripts/taggers` (they have to be wrapped by a class derived from `scripts.tagger.Tagger`)
+  - Some Aesthetic Score Predictors are implemented in there
 
 (Cons)
 - Hijacked CLIP tokenizer is not available (which has SDwebUI specific features like embedding, emphasis, …)
@@ -160,6 +162,7 @@ Please note that all batch editing will be applyed **only to displayed images (=
 If you want to load images from other directory than this app, you should register the directory in whitelist in the "Settings" tab, or use temporary image file (as same as the next section).  
 Input path in "Path whitelist to show images …" and save settings.  
 You can input drive name like "C:\\" (Windows).  
+![](pic/ss11.png) 
 
 
 ### Cannot see any image in dataset and saying "All files must contained within the Gradio python app working directory…"
