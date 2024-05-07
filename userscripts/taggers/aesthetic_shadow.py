@@ -1,9 +1,9 @@
 from PIL import Image
 import math
 from transformers import pipeline
-import devices, settings
-from paths import paths
-from tagger import Tagger
+from scripts import devices, settings
+from scripts.paths import paths
+from scripts.tagger import Tagger
 
 # brought and modified from https://huggingface.co/spaces/cafeai/cafe_aesthetic_demo/blob/main/app.py
 

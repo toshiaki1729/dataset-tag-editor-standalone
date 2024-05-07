@@ -17,8 +17,8 @@ from . import (
     taggers_builtin
 )
 from .custom_scripts import CustomScripts
-from tokenizer import clip_tokenizer
-from tagger import Tagger
+from scripts.tokenizer import clip_tokenizer
+from scripts.tagger import Tagger
 
 re_tags = re.compile(r"^([\s\S]+?)( \[\d+\])?$")
 re_newlines = re.compile(r"[\r\n]+")

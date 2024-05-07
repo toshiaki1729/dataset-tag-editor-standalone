@@ -5,9 +5,9 @@ import math
 
 from transformers import CLIPModel, CLIPProcessor
 
-import model_loader, devices, settings
-from paths import paths
-from tagger import Tagger
+from scripts import model_loader, devices, settings
+from scripts.paths import paths
+from scripts.tagger import Tagger
 
 # brought from https://github.com/waifu-diffusion/aesthetic/blob/main/aesthetic.py
 class Classifier(torch.nn.Module):

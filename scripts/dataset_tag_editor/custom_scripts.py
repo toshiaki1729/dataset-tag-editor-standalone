@@ -36,7 +36,7 @@ class CustomScripts:
           
         classes = []
         try:
-            sys.path = [str(paths.script_path)] + sys.path
+            sys.path = [str(paths.base_path)] + sys.path
             for path in self.scripts_dir.glob("*.py"):
                 self.scripts[path.stem] = self._load_module_from(path)
             for module in self.scripts.values():
