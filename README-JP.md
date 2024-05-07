@@ -17,9 +17,6 @@ DeepBooru interrogator で生成したような、カンマ区切り形式のキ
 (Pros)  
 - gradioの特定のバージョンに起因するバグの回避
 - 起動と動作がより早く
-- キャプション作成のためのインタロゲーターの追加 ([GIT](https://huggingface.co/docs/transformers/model_doc/git) ([paper (arXiv)](https://arxiv.org/abs/2205.14100)), [BLIP-2](https://huggingface.co/docs/transformers/model_doc/blip-2) ([paper (arXiv)](https://arxiv.org/abs/2301.12597)): こちらは大変重いです)
-- お好みのTaggerを `userscripts/taggers` に追加できます (`scripts.tagger.Tagger`を継承したクラスでラップしてください)
-  - 当該フォルダにAesthetic Scoreに基づいたTaggerをいくつか実装しています
 
 (Cons)
 - SD webUI用に改造されたCLIPが使えません (TIや強調などの機能)
