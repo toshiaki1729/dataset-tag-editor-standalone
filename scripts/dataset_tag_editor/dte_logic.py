@@ -794,7 +794,7 @@ class DatasetTagEditor(Singleton):
                     continue
                 try:
                     if use_pipe:
-                        for img_path, tags in  tqdm(zip(imgpaths, tg.predict_pipe(result, th)), desc=tg.name(), total=len(data)):
+                        for img_path, tags in  tqdm(zip(imgpaths, tg.predict_pipe(result, th)), desc=tg.name(), total=len(imgpaths)):
                             interrogate_tags[img_path] += tags
                     else:
                         for img_path, data in tqdm(zip(imgpaths, result), desc=tg.name(), total=len(imgpaths)):
