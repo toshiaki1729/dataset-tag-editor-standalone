@@ -28,7 +28,6 @@ class CustomScripts:
         self.scripts_dir = scripts_dir.absolute()
 
     def load_derived_classes(self, baseclass:type):
-        print(self.scripts_dir)
         back_syspath = sys.path
         if not self.scripts_dir.is_dir():
             logger.warn(f"NOT A DIRECTORY: {self.scripts_dir}")
