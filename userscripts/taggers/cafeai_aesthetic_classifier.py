@@ -31,14 +31,16 @@ class CafeAIAesthetic(Tagger):
         final = {}
         for d in data:
             final[d["label"]] = d["score"]
-        nae = final['not_aesthetic']
         ae = final['aesthetic']
-        return [f"score_{math.floor((ae + (1 - nae))/2 * 10)}"]
+
+        # edit here to change tag
+        return [f"[CAFE]score_{math.floor(ae*10)}"]
 
     def predict(self, image: Image.Image, threshold=None):
         data = self.pipe_aesthetic(image, top_k=2)
         return self._get_score(data)
     
+    # Not neccesary method, just for a little efficient inference
     def predict_pipe(self, data: list[Image.Image], threshold=None):
         if data is None:
             return

@@ -14,6 +14,19 @@ from scripts.tagger import Tagger
 # I'm not sure if this is really working
 BATCH_SIZE = 8
 
+# tags used in Animagine-XL
+SCORE_N = {
+    'very aesthetic':0.71,
+    'aesthetic':0.45,
+    'displeasing':0.27,
+    'very displeasing':-float('inf'),
+}
+
+def get_aesthetic_tag(score:float):
+    for k, v in SCORE_N.items():
+        if score > v:
+            return k
+
 class AestheticShadowV2(Tagger):
     def load(self):
         self.pipe_aesthetic = pipeline("image-classification", "shadowlilac/aesthetic-shadow-v2", device=devices.device, batch_size=BATCH_SIZE)
@@ -35,8 +48,7 @@ class AestheticShadowV2(Tagger):
         for d in data:
             final[d["label"]] = d["score"]
         hq = final['hq']
-        lq = final['lq']
-        return [f"score_{math.floor((hq + (1 - lq))/2 * 10)}"]
+        return [get_aesthetic_tag(hq)]
 
     def predict(self, image: Image.Image, threshold=None):
         data = self.pipe_aesthetic(image)
