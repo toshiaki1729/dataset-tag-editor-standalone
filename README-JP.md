@@ -166,6 +166,11 @@ Google Colabユーザーは、以下のコマンドを実行し、生成され�
 "Settings" タブで、サムネイル画像を一時保存するフォルダを指定してください。  
 "Directory to save temporary files" にパスを指定して "Force using temporary file…" をチェックしてください。  
 
+### 大量の画像や巨大な画像を開いたときに動作が遅くなる
+"Settings" タブで、"Force using temporaty file to ..." にチェックを入れて、 "Maximum resolution of ..." に希望の解像度を入れてください。  
+数百万もの画像を含むなど、あまりにも巨大なデータセットでは効果がないかもしれません。  
+![](pic/ss12.png) 
+
 ### PyTorch が CUDA を使っていない
 - 他のスクリプトと共有するために PyTorch をシステムにインストールする場合
   1. [PyTorchのインストール方法](https://pytorch.org/get-started/locally/) に従って、ただし`-U` (`--upgrade`) をつけてインストールする  

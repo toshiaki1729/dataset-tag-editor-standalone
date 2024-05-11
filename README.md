@@ -170,6 +170,12 @@ Set folder to store temporaly image in the "Settings" tab.
 Input path in "Directory to save temporary files" and check "Force using temporary file…" and save settings.  
 
 
+### So laggy when opening many images or extremely large image
+Check "Force using temporaty file to ..." and input number in "Maximum resolution of ..." in the "Settings" tab.  
+It may not work with dataset with millions of images.  
+![](pic/ss12.png) 
+
+
 ### My PyTorch is working without CUDA
 - To install PyTorch in your system to share it with other scripts
   1. Follow [the PyTorch installation guide](https://pytorch.org/get-started/locally/) with `-U` (`--upgrade`) option  
