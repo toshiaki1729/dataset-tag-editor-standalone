@@ -1,9 +1,11 @@
+import threading
 from singleton import Singleton
 from typing import Optional
 from pathlib import Path
 
 class State(Singleton):
     def __init__(self):
+        self.queue_lock = threading.Lock()
         self.begin()
         self.temp_dir:Optional[Path] = None
 

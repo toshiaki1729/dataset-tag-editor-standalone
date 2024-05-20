@@ -33,7 +33,7 @@ class DepDanbooruTagger:
     def apply(self, image: Image.Image):
         if not self.model:
             return []
-        image = utilities.resize_and_fill(image.convert("RGB"), (512, 512))
+        image = utilities.resize(image, (512, 512))
         image_np = np.expand_dims(np.array(image, dtype=np.float32), 0) / 255
         with torch.no_grad(), torch.autocast('cuda'):
             x = torch.from_numpy(image_np).half().to(devices.device)

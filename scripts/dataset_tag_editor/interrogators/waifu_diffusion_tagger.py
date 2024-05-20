@@ -93,7 +93,7 @@ class WaifuDiffusionTagger:
         # the way to fill empty pixels is quite different from original one;
         # original: fill by white pixels
         # this: repeat the pixels on the edge
-        image = utilities.resize_and_fill(image.convert("RGB"), (width, height))
+        image = utilities.resize(image, (width, height))
         image_np = np.array(image, dtype=np.float32)
         # PIL RGB to OpenCV BGR
         image_np = image_np[:, :, ::-1]
