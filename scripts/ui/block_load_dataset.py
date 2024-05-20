@@ -11,8 +11,6 @@ if TYPE_CHECKING:
 
 
 class LoadDatasetUI(UIBase):
-    def __init__(self):
-        self.caption_file_ext = ""
 
     def create_ui(self, cfg_general):
         with gr.Column(variant="panel"):
@@ -29,7 +27,6 @@ class LoadDatasetUI(UIBase):
                         placeholder=".txt (on Load and Save)",
                         value=cfg_general.caption_ext,
                     )
-                    self.caption_file_ext = cfg_general.caption_ext
                 with gr.Column(scale=1, min_width=80):
                     self.btn_load_datasets = gr.Button(value="Load")
                     self.btn_unload_datasets = gr.Button(value="Unload")
