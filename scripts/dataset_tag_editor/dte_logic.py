@@ -3,12 +3,12 @@ import re, sys
 from typing import Optional
 from enum import Enum
 from PIL import Image
+import traceback
 
 from tqdm import tqdm
 
 from singleton import Singleton
-
-import settings, logger
+import settings, logger, utilities
 from paths import paths
 sys.path = [str(paths.base_path)] + sys.path
 
@@ -19,6 +19,7 @@ from . import (
     taggers_builtin
 )
 from .custom_scripts import CustomScripts
+from .interrigator_names import BLIP2_CAPTIONING_NAMES, WD_TAGGERS, WD_TAGGERS_TIMM
 from scripts.tokenizer import clip_tokenizer
 from scripts.tagger import Tagger
 
@@ -26,8 +27,12 @@ re_tags = re.compile(r"^([\s\S]+?)( \[\d+\])?$")
 re_newlines = re.compile(r"[\r\n]+")
 re_numbers_at_start = re.compile(r"^[-\d]+\s*")
 
-def convert_rgb(data:Image.Image):
-    return data.convert("RGB")
+def get_square_rgb(data:Image.Image):
+    data = utilities.get_rgb_image(data)
+    max_size = max(data.size)
+    data = utilities.resize_and_fill(data, (max_size, max_size), repeat_edge=False)
+    return data
+     
 
 class DatasetTagEditor(Singleton):
     class SortBy(Enum):
@@ -67,39 +72,26 @@ class DatasetTagEditor(Singleton):
         custom_taggers:list[Tagger] = custom_tagger_scripts.load_derived_classes(Tagger)
         logger.write(f"Custom taggers loaded: {[tagger().name() for tagger in custom_taggers]}")
 
-        self.BLIP2_CAPTIONING_NAMES = [
-            "blip2-opt-2.7b",
-            "blip2-opt-2.7b-coco",
-            "blip2-opt-6.7b",
-            "blip2-opt-6.7b-coco",
-            "blip2-flan-t5-xl",
-            "blip2-flan-t5-xl-coco",
-            "blip2-flan-t5-xxl",
-        ]
-
-        self.WD_TAGGERS = {
-            "wd-v1-4-vit-tagger" : 0.35,
-            "wd-v1-4-convnext-tagger" : 0.35,
-            "wd-v1-4-vit-tagger-v2" : 0.3537,
-            "wd-v1-4-convnext-tagger-v2" : 0.3685,
-            "wd-v1-4-convnextv2-tagger-v2" : 0.371,
-            "wd-v1-4-swinv2-tagger-v2" : 0.3771,
-            "wd-v1-4-moat-tagger-v2" : 0.3771,
-            "wd-vit-tagger-v3" : 0.2614,
-            "wd-convnext-tagger-v3" : 0.2682,
-            "wd-swinv2-tagger-v3" : 0.2653,
-        }
-        # {tagger name : default tagger threshold}
-        # v1: idk if it's okay  v2: P=R thresholds on each repo https://huggingface.co/SmilingWolf
+        def read_wd_batchsize(name:str):
+            if "vit" in name:
+                return settings.current.batch_size_vit
+            elif "convnext" in name:
+                return settings.current.batch_size_convnext
+            elif "swinv2" in name:
+                return settings.current.batch_size_swinv2
 
         self.INTERROGATORS = (
             [taggers_builtin.BLIP()]
-            + [taggers_builtin.BLIP2(name) for name in self.BLIP2_CAPTIONING_NAMES]
+            + [taggers_builtin.BLIP2(name) for name in BLIP2_CAPTIONING_NAMES]
             + [taggers_builtin.GITLarge()]
             + [taggers_builtin.DeepDanbooru(settings.current.tagger_use_rating)]
             + [
                 taggers_builtin.WaifuDiffusion(name, threshold, settings.current.tagger_use_rating)
-                for name, threshold in self.WD_TAGGERS.items()
+                for name, threshold in WD_TAGGERS.items()
+            ]
+            + [
+                taggers_builtin.WaifuDiffusionTimm(name, threshold, settings.current.tagger_use_rating, read_wd_batchsize(name))
+                for name, threshold in WD_TAGGERS_TIMM.items()
             ]
             + [taggers_builtin.Z3D_E621()]
             + [cls_tagger() for cls_tagger in custom_taggers]
@@ -108,7 +100,8 @@ class DatasetTagEditor(Singleton):
     
     def interrogate_image(self, path: str, interrogator_name: str, threshold_booru, threshold_wd, threshold_z3d):
         try:
-            img = Image.open(path).convert("RGB")
+            img = Image.open(path)
+            img = get_square_rgb(img)
         except:
             return ""
         else:
@@ -117,7 +110,7 @@ class DatasetTagEditor(Singleton):
                     if isinstance(it, taggers_builtin.DeepDanbooru):
                         with it as tg:
                             res = tg.predict(img, threshold_booru)
-                    elif isinstance(it, taggers_builtin.WaifuDiffusion):
+                    elif isinstance(it, taggers_builtin.WaifuDiffusion) or isinstance(it, taggers_builtin.WaifuDiffusionTimm):
                         with it as tg:
                             res = tg.predict(img, threshold_wd)
                     elif isinstance(it, taggers_builtin.Z3D_E621):
@@ -750,7 +743,7 @@ class DatasetTagEditor(Singleton):
                 if it.name() in interrogator_names:
                     if isinstance(it, taggers_builtin.DeepDanbooru):
                         tagger_thresholds.append((it, threshold_booru))
-                    elif isinstance(it, taggers_builtin.WaifuDiffusion):
+                    elif isinstance(it, taggers_builtin.WaifuDiffusion) or isinstance(it, taggers_builtin.WaifuDiffusionTimm):
                         tagger_thresholds.append((it, threshold_waifu))
                     elif isinstance(it, taggers_builtin.Z3D_E621):
                         tagger_thresholds.append((it, threshold_z3d))
@@ -778,7 +771,7 @@ class DatasetTagEditor(Singleton):
             
             from multiprocessing import Pool
             p = Pool(pool_size)
-            result = p.map(convert_rgb, gen_data())
+            result = p.map(get_square_rgb, gen_data())
             
             for tg, th in tqdm(tagger_thresholds):
                 use_pipe = True
@@ -794,14 +787,14 @@ class DatasetTagEditor(Singleton):
                     continue
                 try:
                     if use_pipe:
-                        for img_path, tags in  tqdm(zip(imgpaths, tg.predict_pipe(result, th)), desc=tg.name(), total=len(imgpaths)):
+                        for img_path, tags in tqdm(zip(imgpaths, tg.predict_pipe(result, th)), desc=tg.name(), total=len(imgpaths)):
                             interrogate_tags[img_path] += tags
                     else:
                         for img_path, data in tqdm(zip(imgpaths, result), desc=tg.name(), total=len(imgpaths)):
                             interrogate_tags[img_path] += tg.predict(data, th)
                 except Exception as e:
-                    tb = sys.exc_info()[2]
-                    logger.error(e.with_traceback(tb))
+                    logger.error(traceback.format_exc())
+                    logger.error(e)
                 finally:
                     tg.stop()
         

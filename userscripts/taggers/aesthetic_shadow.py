@@ -12,7 +12,7 @@ from scripts.tagger import Tagger
 # brought and modified from https://huggingface.co/spaces/cafeai/cafe_aesthetic_demo/blob/main/app.py
 
 # I'm not sure if this is really working
-BATCH_SIZE = 8
+BATCH_SIZE = 1
 
 # tags used in Animagine-XL
 SCORE_N = {

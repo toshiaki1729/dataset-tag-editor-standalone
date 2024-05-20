@@ -1,6 +1,6 @@
 from transformers import Blip2Processor, Blip2ForConditionalGeneration
 
-import devices, settings
+import devices, settings, utilities
 from paths import paths
 
 
