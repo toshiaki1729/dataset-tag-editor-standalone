@@ -74,12 +74,13 @@ class ToprowUI(UIBase):
             metadata_overwrite: bool,
             metadata_as_caption: bool,
             metadata_use_fullpath: bool,
+            caption_file_ext: str
         ):
             if not metadata_input:
                 metadata_input = None
             dte_instance.save_dataset(
                 backup,
-                load_dataset.caption_file_ext,
+                caption_file_ext,
                 save_kohya_metadata,
                 metadata_output,
                 metadata_input,
@@ -98,6 +99,7 @@ class ToprowUI(UIBase):
                 self.cb_metadata_overwrite,
                 self.cb_metadata_as_caption,
                 self.cb_metadata_use_fullpath,
+                load_dataset.tb_caption_file_ext
             ],
         )
 
