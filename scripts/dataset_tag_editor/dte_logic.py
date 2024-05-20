@@ -759,10 +759,16 @@ class DatasetTagEditor(Singleton):
             taglists = load_captions(imgpaths)
         
         interrogate_tags = {img_path : [] for img_path in imgpaths}
-        if interrogate_method != self.InterrogateMethod.NONE:
+        
+        img_to_interrogate = [
+        img_path for i, img_path in enumerate(imgpaths) 
+            if (not taglists[i] or interrogate_method != self.InterrogateMethod.PREFILL)
+        ]
+
+        if interrogate_method != self.InterrogateMethod.NONE and img_to_interrogate:
             logger.write("Preprocess images...")
             def gen_data():
-                for img_path in imgpaths:
+                for img_path in img_to_interrogate:
                     yield self.images.get(img_path)
             pool_size = settings.current.num_cpu_worker
             if pool_size < 0:
@@ -787,10 +793,10 @@ class DatasetTagEditor(Singleton):
                     continue
                 try:
                     if use_pipe:
-                        for img_path, tags in tqdm(zip(imgpaths, tg.predict_pipe(result, th)), desc=tg.name(), total=len(imgpaths)):
+                        for img_path, tags in tqdm(zip(img_to_interrogate, tg.predict_pipe(result, th)), desc=tg.name(), total=len(img_to_interrogate)):
                             interrogate_tags[img_path] += tags
                     else:
-                        for img_path, data in tqdm(zip(imgpaths, result), desc=tg.name(), total=len(imgpaths)):
+                        for img_path, data in tqdm(zip(img_to_interrogate, result), desc=tg.name(), total=len(img_to_interrogate)):
                             interrogate_tags[img_path] += tg.predict(data, th)
                 except Exception as e:
                     logger.error(traceback.format_exc())
@@ -803,7 +809,7 @@ class DatasetTagEditor(Singleton):
                 tags = interrogate_tags[img_path]
             elif interrogate_method == self.InterrogateMethod.PREPEND:
                 tags = interrogate_tags[img_path] + tags
-            else:
+            elif interrogate_method != self.InterrogateMethod.PREFILL:
                 tags = tags + interrogate_tags[img_path]
 
             self.set_tags_by_image_path(img_path, tags)
