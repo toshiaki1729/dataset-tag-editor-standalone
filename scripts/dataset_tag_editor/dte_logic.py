@@ -4,6 +4,7 @@ from typing import Optional
 from enum import Enum
 from PIL import Image
 import traceback
+from multiprocessing import Pool
 
 from tqdm import tqdm
 
@@ -27,11 +28,30 @@ re_tags = re.compile(r"^([\s\S]+?)( \[\d+\])?$")
 re_newlines = re.compile(r"[\r\n]+")
 re_numbers_at_start = re.compile(r"^[-\d]+\s*")
 
+
 def get_square_rgb(data:Image.Image):
     data = utilities.get_rgb_image(data)
     max_size = max(data.size)
     data = utilities.resize_and_fill(data, (max_size, max_size), repeat_edge=False)
     return data
+
+
+def load_image(img_path: Path, max_res: float, use_temp_dir: bool):
+    try:
+        img = Image.open(img_path)
+        if (max_res > 0):
+            img_res = int(max_res), int(max_res)
+            img.thumbnail(img_res)
+    except:
+        return None
+    abs_path = str(img_path.absolute())
+    if not use_temp_dir and max_res <= 0:
+        img.already_saved_as = abs_path
+    return abs_path, img
+
+
+def load_image_wrapper(args):
+    return load_image(*args)
      
 
 class DatasetTagEditor(Singleton):
@@ -668,13 +688,18 @@ class DatasetTagEditor(Singleton):
         self.clear()
 
         img_dir_obj = Path(img_dir)
+        pool_size = settings.current.num_cpu_worker
+        if pool_size < 0:
+            import os
+            pool_size = os.cpu_count() + 1
+        process_pool = Pool(pool_size)
 
         logger.write(f"Loading dataset from {img_dir_obj.absolute()}")
         if recursive:
             logger.write(f"Also loading from subdirectories.")
 
         try:
-            filepaths = img_dir_obj.glob("**/*") if recursive else img_dir_obj.glob("*")
+            filepaths = img_dir_obj.rglob("*") if recursive else img_dir_obj.glob("*")
             filepaths = [p for p in filepaths if p.is_file()]
         except Exception as e:
             logger.error(e)
@@ -688,25 +713,17 @@ class DatasetTagEditor(Singleton):
         )
 
         def load_images(filepaths: list[Path]):
+            logger.write("Loading and checking images...")
             imgpaths = []
-            images = {}
-            for img_path in filepaths:
-                if img_path.suffix == caption_ext:
-                    continue
-                try:
-                    img = Image.open(img_path)
-                    if (max_res > 0):
-                        img_res = int(max_res), int(max_res)
-                        img.thumbnail(img_res)
-                except:
-                    continue
-                else:
-                    abs_path = str(img_path.absolute())
-                    if not use_temp_dir and max_res <= 0:
-                        img.already_saved_as = abs_path
-                    images[abs_path] = img
+            images = dict()
+            result = process_pool.map(load_image_wrapper, [(path, max_res, use_temp_dir) for path in filepaths])
+            result = [r for r in result if r]
 
-                imgpaths.append(abs_path)
+            for img_path, img in result:
+                imgpaths.append(img_path)
+                images[img_path] = img
+            
+            logger.write(f"Total {len(imgpaths)} valid images")
             return imgpaths, images
 
         def load_captions(imgpaths: list[str]):
@@ -766,19 +783,13 @@ class DatasetTagEditor(Singleton):
         ]
 
         if interrogate_method != self.InterrogateMethod.NONE and img_to_interrogate:
-            logger.write("Preprocess images...")
+            logger.write("Preprocessing images...")
             def gen_data():
                 for img_path in img_to_interrogate:
                     yield self.images.get(img_path)
-            pool_size = settings.current.num_cpu_worker
-            if pool_size < 0:
-                import os
-                pool_size = os.cpu_count() + 1
+            result = process_pool.map(get_square_rgb, gen_data())
             
-            from multiprocessing import Pool
-            p = Pool(pool_size)
-            result = p.map(get_square_rgb, gen_data())
-            
+            logger.write("Interrogating images...")
             for tg, th in tqdm(tagger_thresholds):
                 use_pipe = True
                 tg.start()
@@ -814,8 +825,8 @@ class DatasetTagEditor(Singleton):
 
             self.set_tags_by_image_path(img_path, tags)
 
-        for i, p in enumerate(sorted(self.dataset.datas.keys())):
-            self.img_idx[p] = i
+        for i, process_pool in enumerate(sorted(self.dataset.datas.keys())):
+            self.img_idx[process_pool] = i
 
         self.construct_tag_infos()
         logger.write(f"Loading Completed: {len(self.dataset)} images found")
