@@ -62,43 +62,44 @@ class TagSelectUI:
         self.cbg_tags = gr.CheckboxGroup(label="Select Tags", interactive=True)
 
     def set_callbacks(self):
+        o_update = [self.cbg_tags, self.tb_search_tags]
         self.tb_search_tags.change(
             fn=self.tb_search_tags_changed,
-            inputs=self.tb_search_tags,
-            outputs=self.cbg_tags,
+            inputs=self.tb_search_tags
+        ).then(
+            fn=self.cbg_tags_update, outputs=o_update
         )
         self.cb_prefix.change(
-            fn=self.cb_prefix_changed, inputs=self.cb_prefix, outputs=self.cbg_tags
+            fn=self.cb_prefix_changed, inputs=self.cb_prefix, outputs=o_update
         )
         self.cb_suffix.change(
-            fn=self.cb_suffix_changed, inputs=self.cb_suffix, outputs=self.cbg_tags
+            fn=self.cb_suffix_changed, inputs=self.cb_suffix, outputs=o_update
         )
         self.cb_regex.change(
-            fn=self.cb_regex_changed, inputs=self.cb_regex, outputs=self.cbg_tags
+            fn=self.cb_regex_changed, inputs=self.cb_regex, outputs=o_update
         )
         self.rb_sort_by.change(
-            fn=self.rd_sort_by_changed, inputs=self.rb_sort_by, outputs=self.cbg_tags
+            fn=self.rd_sort_by_changed, inputs=self.rb_sort_by, outputs=o_update
         )
         self.rb_sort_order.change(
             fn=self.rd_sort_order_changed,
             inputs=self.rb_sort_order,
-            outputs=self.cbg_tags,
+            outputs=o_update,
         )
         self.btn_select_visibles.click(
-            fn=self.btn_select_visibles_clicked, outputs=self.cbg_tags
+            fn=self.btn_select_visibles_clicked, outputs=o_update
         )
         self.btn_deselect_visibles.click(
             fn=self.btn_deselect_visibles_clicked,
             inputs=self.cbg_tags,
-            outputs=self.cbg_tags,
+            outputs=o_update,
         )
         self.cbg_tags.change(
-            fn=self.cbg_tags_changed, inputs=self.cbg_tags, outputs=self.cbg_tags
+            fn=self.cbg_tags_changed, inputs=self.cbg_tags, outputs=o_update
         )
 
     def tb_search_tags_changed(self, tb_search_tags: str):
         self.filter_word = tb_search_tags
-        return self.cbg_tags_update()
 
     def cb_prefix_changed(self, prefix: bool):
         self.prefix = prefix
@@ -163,4 +164,7 @@ class TagSelectUI:
         )
         tags = dte_instance.write_tags(tags, self.sort_by)
         selected_tags = dte_instance.write_tags(list(self.selected_tags), self.sort_by)
-        return gr.CheckboxGroup(value=selected_tags, choices=tags)
+        return [
+            gr.CheckboxGroup(value=selected_tags, choices=tags),
+            self.filter_word
+        ]

@@ -80,7 +80,7 @@ class FilterByTagsUI(UIBase):
             lambda: update_gallery()
             + batch_edit_captions.get_common_tags(get_filters, self)
             + [move_or_delete_files.get_current_move_or_delete_target_num()]
-            + [batch_edit_captions.tag_select_ui_remove.cbg_tags_update()]
+            + batch_edit_captions.tag_select_ui_remove.cbg_tags_update()
         )
 
         common_callback_output = (
