@@ -156,7 +156,7 @@ class LoadDatasetUI(UIBase):
             return (
                 [imgs, []]
                 + filter_by_tags.clear_filters(update_filter_and_gallery)
-                + [batch_edit_captions.tag_select_ui_remove.cbg_tags_update()]
+                + batch_edit_captions.tag_select_ui_remove.cbg_tags_update()
             )
 
         self.btn_load_datasets.click(
@@ -188,7 +188,7 @@ class LoadDatasetUI(UIBase):
             return (
                 [[], []]
                 + filter_by_tags.clear_filters(update_filter_and_gallery)
-                + [batch_edit_captions.tag_select_ui_remove.cbg_tags_update()]
+                + batch_edit_captions.tag_select_ui_remove.cbg_tags_update()
             )
 
         self.btn_unload_datasets.click(

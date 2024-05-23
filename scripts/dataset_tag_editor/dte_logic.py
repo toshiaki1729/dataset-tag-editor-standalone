@@ -1,6 +1,6 @@
 from pathlib import Path
 import re, sys
-from typing import Optional
+from typing import Optional, Iterable
 from enum import Enum
 from PIL import Image
 import traceback
@@ -187,7 +187,7 @@ class DatasetTagEditor(Singleton):
 
     def sort_tags(
         self,
-        tags: list[str],
+        tags: Iterable[str],
         sort_by: SortBy = SortBy.ALPHA,
         sort_order: SortOrder = SortOrder.ASC,
     ):
