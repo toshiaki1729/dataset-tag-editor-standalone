@@ -733,7 +733,8 @@ class DatasetTagEditor(Singleton):
                 text_path = img_path.with_suffix(caption_ext)
                 caption_text = ""
                 if interrogate_method != self.InterrogateMethod.OVERWRITE:
-                    # from modules/textual_inversion/dataset.py, modified
+                    # brought from https://github.com/AUTOMATIC1111/stable-diffusion-webui and modified
+                    # from modules/textual_inversion/dataset.py
                     if text_path.is_file():
                         caption_text = text_path.read_text("utf8")
                     elif load_caption_from_filename:
@@ -742,7 +743,7 @@ class DatasetTagEditor(Singleton):
                         if self.re_word:
                             tokens = self.re_word.findall(caption_text)
                             caption_text = (
-                                settings.current.dataset_filename_join_string or ""
+                                settings.current.filename_join_string or ""
                             ).join(tokens)
 
                 if replace_new_line:
