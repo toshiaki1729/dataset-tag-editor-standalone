@@ -30,6 +30,9 @@ class DatasetGalleryUI(UIBase):
                 imgs = dte_instance.get_filtered_imgpaths(self.get_filters())
                 self.selected_index = select_data.index
                 self.selected_path = imgs[self.selected_index]
+            else:
+                self.selected_index = -1
+                self.selected_path = ""
             gallery_state.register_value("Selected Image", self.selected_path)
         
         self.gl_dataset_images.select(gl_dataset_images_on_change)
