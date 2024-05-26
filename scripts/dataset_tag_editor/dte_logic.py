@@ -45,8 +45,6 @@ def load_image(img_path: Path, max_res: float, use_temp_dir: bool):
     except:
         return None
     abs_path = str(img_path.absolute())
-    if not use_temp_dir and max_res <= 0:
-        img.already_saved_as = abs_path
     return abs_path, img
 
 
@@ -722,6 +720,8 @@ class DatasetTagEditor(Singleton):
             for img_path, img in result:
                 imgpaths.append(img_path)
                 images[img_path] = img
+                if not use_temp_dir and max_res <= 0:
+                    img.already_saved_as = img_path
             
             logger.write(f"Total {len(imgpaths)} valid images")
             return imgpaths, images
