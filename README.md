@@ -118,9 +118,9 @@ Basic workflow is as follows:
 Please note that all batch editing will be applyed **only to displayed images (=filtered images)**.
 
 ### 1. Which filter is appropriate?
-- **I want to edit all at once**  
+#### I want to edit all at once  
   No filter is required.
-- **Some images require editing**  
+#### Some images require editing    
   1. **They should / shouldn't already have same tag(s)**  
     Go to "Filter by Tags" so that the only images to be edited are displayed.
   1. **They have nothing in common**  
@@ -129,26 +129,26 @@ Please note that all batch editing will be applyed **only to displayed images (=
 
 ### 2. How can I edit as I want?
   ![](pic/ss07.png)  
-- **I want to add some new tags**
+#### I want to add some new tags  
   1. Go to "Batch Edit Captions" tab
   1. Append tags to "Edit tags" textbox
   1. Push "Apply changes to filtered images" button  
   ![](pic/ss08.png)  
   "foo" and "bar" will be added to all images displayed.
 
-- **I want to replace the tags which are common to displayed images**
+#### I want to replace the tags which are common to displayed images  
   1. Go to "Batch Edit Captions" tab
   1. Replace tags in "Edit tags" textbox
   1. Push "Apply changes to filtered images" button  
   ![](pic/ss09.png)  
   "male focus" and "solo" will be replaced with "foo" and "bar".
 
-- **I want to remove some tags**  
+#### I want to remove some tags  
   The same as replacing. Just replace the tags with "blank".  
   Also you can use "Remove" tab in "Batch Edit Captions".  
   ![](pic/ss10.png)  
 
-- **I want to add/replace/remove tags more flexibly**
+#### I want to add/replace/remove tags more flexibly  
   1. Go to "Batch Edit Captions" tab
   2. Use "Search and Replace" with "Use regex" checked  
   ![](pic/ss11.png)  
