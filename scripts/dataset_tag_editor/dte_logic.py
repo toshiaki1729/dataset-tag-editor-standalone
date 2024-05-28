@@ -23,6 +23,7 @@ from .custom_scripts import CustomScripts
 from .interrigator_names import BLIP2_CAPTIONING_NAMES, WD_TAGGERS, WD_TAGGERS_TIMM
 from scripts.tokenizer import clip_tokenizer
 from scripts.tagger import Tagger
+from cmd_args import opts
 
 re_tags = re.compile(r"^([\s\S]+?)( \[\d+\])?$")
 re_newlines = re.compile(r"[\r\n]+")
@@ -683,15 +684,18 @@ class DatasetTagEditor(Singleton):
         kohya_json_path: Optional[str], 
         max_res:float
     ):
+        import time
+        if opts.profile:
+            start_ns = time.time_ns()
+            epoch_ns = time.time_ns()
+        def timestamp(epoch:int, text:str):
+            elapsed = time.time_ns() - epoch
+            logger.profile(f"{text} : {elapsed/1000000:.3f} [ms]")
+        
         self.clear()
 
         img_dir_obj = Path(img_dir)
-        pool_size = settings.current.num_cpu_worker
-        if pool_size < 0:
-            import os
-            pool_size = os.cpu_count() + 1
-        process_pool = Pool(pool_size)
-
+        estimated_image_num = 0
         logger.write(f"Loading dataset from {img_dir_obj.absolute()}")
         if recursive:
             logger.write(f"Also loading from subdirectories.")
@@ -699,12 +703,33 @@ class DatasetTagEditor(Singleton):
         try:
             filepaths = img_dir_obj.rglob("*") if recursive else img_dir_obj.glob("*")
             filepaths = [p for p in filepaths if p.is_file()]
+            estimated_image_num = len([p for p in filepaths if p.suffix.lower() in Image.registered_extensions()])
         except Exception as e:
+            logger.error(f"Cannot load dataset from directory: {img_dir}")
             logger.error(e)
             logger.write("Loading Aborted.")
+            self.clear()
             return
-
+        
         self.dataset_dir = img_dir
+        
+        if opts.profile:
+            timestamp(epoch_ns, "List files to read")
+            epoch_ns = time.time_ns()
+        
+        pool_size = settings.current.num_cpu_worker
+        if pool_size < 0:
+            import os, math
+            # maybe a good approximation of the optimal number of CPU processes
+            pool_size = round(3.5*math.log(estimated_image_num)-12.65) if estimated_image_num > 0 else 1
+            pool_size = max(pool_size, 1)
+            pool_size = min(pool_size, os.cpu_count() + 1)
+            logger.write(f"Auto-tuned CPU process count = {pool_size}")
+        process_pool = Pool(pool_size)
+
+        if opts.profile:
+            timestamp(epoch_ns, "Create process pool")
+            epoch_ns = time.time_ns()
 
         logger.write(
             f"Total {len(filepaths)} files under the directory including not image files."
@@ -767,14 +792,24 @@ class DatasetTagEditor(Singleton):
                         tagger_thresholds.append((it, threshold_z3d))
                     else:
                         tagger_thresholds.append((it, None))
-
-        if kohya_json_path:
-            imgpaths, self.images, taglists = kohya_metadata.read(
-                img_dir, kohya_json_path, use_temp_dir
-            )
-        else:
-            imgpaths, self.images = load_images(filepaths)
-            taglists = load_captions(imgpaths)
+        try:
+            if kohya_json_path:
+                imgpaths, self.images, taglists = kohya_metadata.read(
+                    img_dir, kohya_json_path, use_temp_dir
+                )
+            else:
+                imgpaths, self.images = load_images(filepaths)
+                taglists = load_captions(imgpaths)
+        except Exception as e:
+            logger.error(f"Cannot load dataset from directory: {self.dataset_dir}")
+            logger.error(e)
+            logger.write("Loading Aborted.")
+            self.clear()
+            return
+        
+        if opts.profile:
+            timestamp(epoch_ns, "Load dataset and convert images")
+            epoch_ns = time.time_ns()
         
         interrogate_tags = {img_path : [] for img_path in imgpaths}
         
@@ -788,7 +823,18 @@ class DatasetTagEditor(Singleton):
             def gen_data():
                 for img_path in img_to_interrogate:
                     yield self.images.get(img_path)
-            result = process_pool.map(get_square_rgb, gen_data())
+            try:
+                result = process_pool.map(get_square_rgb, gen_data())
+            except Exception as e:
+                logger.error("Cannot preprocess image for interrogating")
+                logger.error(e)
+                logger.write("Loading Aborted.")
+                self.clear()
+                return
+
+            if opts.profile:
+                timestamp(epoch_ns, "Preprocess images for interrogating")
+                epoch_ns = time.time_ns()
             
             logger.write("Interrogating images...")
             for tg, th in tqdm(tagger_thresholds):
@@ -816,6 +862,10 @@ class DatasetTagEditor(Singleton):
                 finally:
                     tg.stop()
         
+        if opts.profile:
+            timestamp(epoch_ns, "Interrogate images")
+            epoch_ns = time.time_ns()
+        
         for img_path, tags in zip(imgpaths, taglists):
             if (interrogate_method == self.InterrogateMethod.PREFILL and not tags) or (interrogate_method == self.InterrogateMethod.OVERWRITE):
                 tags = interrogate_tags[img_path]
@@ -826,11 +876,23 @@ class DatasetTagEditor(Singleton):
 
             self.set_tags_by_image_path(img_path, tags)
 
-        for i, process_pool in enumerate(sorted(self.dataset.datas.keys())):
-            self.img_idx[process_pool] = i
+        for i, path in enumerate(sorted(self.dataset.datas.keys())):
+            self.img_idx[path] = i
+        
+        if opts.profile:
+            timestamp(epoch_ns, "Store image tags")
+            epoch_ns = time.time_ns()
 
         self.construct_tag_infos()
+        
+        if opts.profile:
+            timestamp(epoch_ns, "Analyze image tags")
+        
         logger.write(f"Loading Completed: {len(self.dataset)} images found")
+        if opts.profile:
+            timestamp(start_ns, "Total elapsed time")
+
+
 
     def save_dataset(
         self,

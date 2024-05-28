@@ -48,5 +48,10 @@ parser.add_argument(
     help="Force install the latest PyTorch with specified compute platform (if not installed in this computer)",
     default=None,
 )
-
+parser.add_argument(
+    "--profile",
+    action="store_true",
+    help="Launch with simple and partial performance profiler (show elapsed time on loading dataset)",
+    default=False,
+)
 opts = parser.parse_args()

@@ -7,3 +7,4 @@ torch>=1.10.0
 torchvision
 tqdm
 timm>=0.9.0
+print-color
