@@ -184,7 +184,8 @@ It may not work with dataset with millions of images.
   (example) ```pip3 install -U torch torchvision --index-url https://download.pytorch.org/whl/cu118```
   1. Remove `venv` folder
   1. Run `install.bat`
-- To install PyTorch only in venv
+- To install PyTorch only in venv  
+  Do the same thing above after activating venv or do the following things
   1. Open `launch_user.bat` with some text editor
   2. Change the 3rd line to `set COMMANDLINE_ARGS="--force-install-torch cu118"` (you can choose from `cu117`, `cu118`, `cu121` or `cpu`)
   3. Run `launch_user.bat`
