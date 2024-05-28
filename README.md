@@ -128,6 +128,7 @@ Please note that all batch editing will be applyed **only to displayed images (=
     Images can also be added to the filter by pushing [Enter] key.
 
 ### 2. How can I edit as I want?
+  ![](pic/ss07.png)  
 - **I want to add some new tags**
   1. Go to "Batch Edit Captions" tab
   1. Append tags to "Edit tags" textbox
@@ -144,12 +145,13 @@ Please note that all batch editing will be applyed **only to displayed images (=
 
 - **I want to remove some tags**  
   The same as replacing. Just replace the tags with "blank".  
-  Also you can use "Remove" tab in "Batch Edit Captions".
+  Also you can use "Remove" tab in "Batch Edit Captions".  
+  ![](pic/ss10.png)  
 
 - **I want to add/replace/remove tags more flexibly**
   1. Go to "Batch Edit Captions" tab
   2. Use "Search and Replace" with "Use regex" checked  
-  ![](pic/ss10.png)  
+  ![](pic/ss11.png)  
   "1boy", "2boys", … will be replaced with "1girl", "2girls", … in each tags of images displayed.  
   A comma will be regarded as the sepalator of two tags.  
   By using regex, you can add/replace/remove tags according to more complex conditions.
@@ -161,7 +163,7 @@ Please note that all batch editing will be applyed **only to displayed images (=
 If you want to load images from other directory than this app, you should register the directory in whitelist in the "Settings" tab, or use temporary image file (as same as the next section).  
 Input path in "Path whitelist to show images …" and save settings.  
 You can input drive name like "C:\\" (Windows).  
-![](pic/ss11.png) 
+![](pic/ss12.png) 
 
 
 ### Cannot see any image in dataset and saying "All files must contained within the Gradio python app working directory…"
@@ -173,7 +175,7 @@ Input path in "Directory to save temporary files" and check "Force using tempora
 ### So laggy when opening many images or extremely large image
 Input non-zero number in "Maximum resolution of ..." in the "Settings" tab to use smaller thumbnail for the image gallery.  
 It may not work with dataset with millions of images.  
-![](pic/ss12.png) 
+![](pic/ss13.png) 
 
 
 ### My PyTorch is working without CUDA

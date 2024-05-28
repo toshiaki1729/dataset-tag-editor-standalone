@@ -126,28 +126,30 @@ Google Colabユーザーは、以下のコマンドを実行し、生成され�
     フィルターへの画像の追加は[Enter]キーがショートカットです。
 
 ### 2. 編集の仕方
+  ![](pic/ss07.png)  
 - **新しいタグを追加したい場合**
   1. "Batch Edit Captions" タブを開く
   1. "Edit tags" 内に追加したいタグをカンマ区切りで追記する
-  1. "Apply changes to filtered images" ボタンを押す
+  1. "Apply changes to filtered images" ボタンを押す  
   ![](pic/ss08.png)  
   例："foo" と "bar" が表示されている画像に追加されます
 
 - **絞り込まれた画像に共通なタグを編集（置換）したい場合**
   1. "Batch Edit Captions" タブを開く
   1. "Edit tags" 内に表示されたタグを書き換える
-  1. "Apply changes to filtered images" ボタンを押す
+  1. "Apply changes to filtered images" ボタンを押す  
   ![](pic/ss09.png)  
   例："male focus" と "solo" がそれぞれ "foo" と "bar" に置換されます
 
 - **タグを取り除きたい場合**  
   置換と同様の手順で、対象のタグを空欄に書き換えることで取り除けます。  
-  共通のタグでない（一部の画像にのみ含まれる等）場合は、"Batch Edit Captions" タブにある "Remove" を利用することもできます。
+  共通のタグでない（一部の画像にのみ含まれる等）場合は、"Batch Edit Captions" タブにある "Remove" を利用することもできます。  
+  ![](pic/ss10.png)  
 
 - **柔軟にタグを追加・削除・置換したい場合**
   1. "Batch Edit Captions" タブを開く
   2. "Use regex" にチェックを入れて "Search and Replace" する  
-  ![](pic/ss10.png)  
+  ![](pic/ss11.png)  
   例："1boy", "2boys", … がそれぞれ、 "1girl", "2girls", … に置換されます。  
   カンマはタグの区切りとみなされるため、カンマを追加・削除することで新しいタグを追加・削除できます。  
   正規表現（regex）を使うと、複雑な条件に応じてタグの編集が可能です。
@@ -159,7 +161,7 @@ Google Colabユーザーは、以下のコマンドを実行し、生成され�
 このプログラムのあるフォルダ以外から画像を読み込む場合は、"Settings" タブで、画像の読み取りを許可するフォルダを指定する、もしくは、下の項目と同様の方法で、サムネイル画像を一時保存するフォルダを指定してください。  
 "Path whitelist to show images …" にパスを指定します。  
 子フォルダに全て適用されるため、ドライブ名を"C:\\"のように指定すると、Cドライブの全てに対して読み取りを許可します。  
-![](pic/ss11.png) 
+![](pic/ss12.png) 
 
 ### ギャラリーに画像が表示されず、コンソールに "All files must contained within the Gradio python app working directory…" と出ている
 (おそらくv0.0.5以前)  
@@ -169,7 +171,7 @@ Google Colabユーザーは、以下のコマンドを実行し、生成され�
 ### 大量の画像や巨大な画像を開いたときに動作が遅くなる
 "Settings" タブで、"Maximum resolution of ..." に希望の解像度を入れて、サムネイルのサイズを制限してください。  
 数百万もの画像を含むなど、あまりにも巨大なデータセットでは効果がないかもしれません。  
-![](pic/ss12.png) 
+![](pic/ss13.png) 
 
 ### PyTorch が CUDA を使っていない
 - 他のスクリプトと共有するために PyTorch をシステムにインストールする場合
