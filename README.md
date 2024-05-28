@@ -171,7 +171,7 @@ Input path in "Directory to save temporary files" and check "Force using tempora
 
 
 ### So laggy when opening many images or extremely large image
-Check "Force using temporaty file to ..." and input number in "Maximum resolution of ..." in the "Settings" tab.  
+Input non-zero number in "Maximum resolution of ..." in the "Settings" tab to use smaller thumbnail for the image gallery.  
 It may not work with dataset with millions of images.  
 ![](pic/ss12.png) 
 

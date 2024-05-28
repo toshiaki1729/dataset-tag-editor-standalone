@@ -167,7 +167,7 @@ Google Colabユーザーは、以下のコマンドを実行し、生成され�
 "Directory to save temporary files" にパスを指定して "Force using temporary file…" をチェックしてください。  
 
 ### 大量の画像や巨大な画像を開いたときに動作が遅くなる
-"Settings" タブで、"Force using temporaty file to ..." にチェックを入れて、 "Maximum resolution of ..." に希望の解像度を入れてください。  
+"Settings" タブで、"Maximum resolution of ..." に希望の解像度を入れて、サムネイルのサイズを制限してください。  
 数百万もの画像を含むなど、あまりにも巨大なデータセットでは効果がないかもしれません。  
 ![](pic/ss12.png) 
 
