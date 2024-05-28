@@ -46,7 +46,7 @@ DESCRIPTIONS = {
     "interrogator_max_length": "Maximum text length for interrogator (for GIT only)",
     "interrogator_model_dir": "Path to directory for downloaded interrogator models",
     "tagger_use_rating": "Use Rating tags when using Tagger",
-    "num_cpu_worker": "Number of CPU workers when preprocessing images on interrogating (set -1 to auto)",
+    "num_cpu_worker": "Number of CPU workers when loading or preprocessing images (set -1 to auto)",
     "batch_size_vit": "Inference batch size for ViT taggers",
     "batch_size_convnext": "Inference batch size for ConvNeXt taggers",
     "batch_size_swinv2": "Inference batch size for SwinV2 taggers",
