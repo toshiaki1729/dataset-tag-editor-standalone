@@ -181,7 +181,7 @@ Google Colabユーザーは、以下のコマンドを実行し、生成され�
   1. `venv` フォルダを削除する
   1. `install.bat` を実行する
 - PyTorch を venv のみにインストールする場合  
-  venvを`activate`した後に上記の作業を行う、もしくは以下の手順を行ってください。
+  venvを`activate`した後にPytorchを`-U`オプションを付けてインストールする、もしくは以下の手順を行ってください。  
   1. `launch_user.bat` をテキストエディタで開く
   2. 3行目を `set COMMANDLINE_ARGS="--force-install-torch cu118"` に変える  
   (`cu117`、`cu118`、`cu121` または `cpu` から選べます)
