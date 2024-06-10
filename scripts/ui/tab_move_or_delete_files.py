@@ -14,6 +14,8 @@ class MoveOrDeleteFilesUI(UIBase):
     def __init__(self):
         self.target_data = "Selected One"
         self.current_target_txt = ""
+        self.update_func = None
+        self.update_args = None
 
     def create_ui(self, cfg_file_move_delete):
         gr.HTML(value="<b>Note: </b>Moved or deleted images will be unloaded.")
@@ -48,22 +50,23 @@ class MoveOrDeleteFilesUI(UIBase):
         self.btn_move_or_delete_delete_files = gr.Button(
             value="DELETE File(s)", variant="primary"
         )
-
-    def get_current_move_or_delete_target_num(self):
-        return self.current_target_txt
+    
+    def update_current_move_or_delete_target_num(self):
+        if self.update_func:
+            text = self.update_func(self.target_data)
+            return gr.HTML(text)
+        else:
+            return self.ta_move_or_delete_target_dataset_num
 
     def set_callbacks(
         self,
         o_update_filter_and_gallery: list[gr.components.Component],
         dataset_gallery: DatasetGalleryUI,
-        filter_by_tags: FilterByTagsUI,
-        batch_edit_captions: BatchEditCaptionsUI,
-        filter_by_selection: FilterBySelectionUI,
-        edit_caption_of_selected_image: EditCaptionOfSelectedImageUI,
         get_filters: Callable[[], list[dte_module.filters.Filter]],
         update_filter_and_gallery: Callable[[], list],
     ):
-        def _get_current_move_or_delete_target_num():
+        def _get_current_move_or_delete_target_num(text:str):
+            self.target_data = text
             if self.target_data == "Selected One":
                 self.current_target_txt = f"Target dataset num: {1 if dataset_gallery.selected_index != -1 else 0}"
             elif self.target_data == "All Displayed Ones":
@@ -73,27 +76,16 @@ class MoveOrDeleteFilesUI(UIBase):
                 self.current_target_txt = f"Target dataset num: 0"
             return self.current_target_txt
 
-        update_args = {
-            "fn": _get_current_move_or_delete_target_num,
-            "inputs": None,
+        
+        self.update_func = _get_current_move_or_delete_target_num
+
+        self.update_args = {
+            "fn": self.update_func,
+            "inputs": [self.rb_move_or_delete_target_data],
             "outputs": [self.ta_move_or_delete_target_dataset_num],
         }
 
-        batch_edit_captions.btn_apply_edit_tags.click(**update_args)
-
-        batch_edit_captions.btn_apply_sr_tags.click(**update_args)
-
-        filter_by_selection.btn_apply_image_selection_filter.click(**update_args)
-
-        filter_by_tags.btn_clear_tag_filters.click(**update_args)
-
-        filter_by_tags.btn_clear_all_filters.click(**update_args)
-
-        edit_caption_of_selected_image.btn_apply_changes_selected_image.click(
-            **update_args
-        )
-
-        self.rb_move_or_delete_target_data.change(**update_args)
+        self.rb_move_or_delete_target_data.change(**self.update_args)
 
         def move_files(
             target_data: str, target_file: list[str], caption_ext: str, dest_dir: str
@@ -125,8 +117,7 @@ class MoveOrDeleteFilesUI(UIBase):
                 self.tb_move_or_delete_destination_dir,
             ],
             outputs=o_update_filter_and_gallery,
-        )
-        self.btn_move_or_delete_move_files.click(**update_args)
+        ).then(**self.update_args)
 
         def delete_files(target_data: str, target_file: list[str], caption_ext: str):
             delete_img = "Image File" in target_file
@@ -155,5 +146,4 @@ class MoveOrDeleteFilesUI(UIBase):
                 self.tb_move_or_delete_caption_ext,
             ],
             outputs=o_update_filter_and_gallery,
-        )
-        self.btn_move_or_delete_delete_files.click(**update_args)
+        ).then(**self.update_args)
