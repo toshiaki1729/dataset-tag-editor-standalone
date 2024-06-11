@@ -69,7 +69,6 @@ class FilterByTagsUI(UIBase):
     def set_callbacks(
         self,
         o_update_gallery: list[gr.components.Component],
-        o_update_filter_and_gallery: list[gr.components.Component],
         batch_edit_captions: BatchEditCaptionsUI,
         move_or_delete_files: MoveOrDeleteFilesUI,
         update_gallery: Callable[[], list],
@@ -80,7 +79,7 @@ class FilterByTagsUI(UIBase):
             lambda: update_gallery()
             + batch_edit_captions.get_common_tags(get_filters, self)
             + [move_or_delete_files.update_current_move_or_delete_target_num()]
-            + batch_edit_captions.tag_select_ui_remove.cbg_tags_update()
+            + [batch_edit_captions.tag_select_ui_remove.cbg_tags_update()]
         )
 
         common_callback_output = (
@@ -105,17 +104,25 @@ class FilterByTagsUI(UIBase):
         self.tag_filter_ui.set_callbacks()
         self.tag_filter_ui_neg.set_callbacks()
 
+        o_clear_filters = [self.tag_filter_ui.cbg_tags, self.tag_filter_ui.tb_search_tags] + [self.tag_filter_ui_neg.cbg_tags, self.tag_filter_ui_neg.tb_search_tags]
+
         self.btn_clear_tag_filters.click(
             fn=lambda: self.clear_filters(update_filter_and_gallery),
-            outputs=o_update_filter_and_gallery,
+            outputs=o_clear_filters,
+        ).then(
+            fn = lambda: common_callback(),
+            inputs=None,
+            outputs=common_callback_output
         )
 
         self.btn_clear_all_filters.click(
             fn=lambda: self.clear_filters(update_filter_and_gallery),
-            outputs=o_update_filter_and_gallery,
+            outputs=o_clear_filters,
+        ).then(
+            fn = lambda: common_callback(),
+            inputs=None,
+            outputs=common_callback_output
         )
 
-    def clear_filters(self, update_filter_and_gallery):
-        self.tag_filter_ui.clear_filter()
-        self.tag_filter_ui_neg.clear_filter()
-        return update_filter_and_gallery()
+    def clear_filters(self):
+        return self.tag_filter_ui.clear_filter() + self.tag_filter_ui_neg.clear_filter()

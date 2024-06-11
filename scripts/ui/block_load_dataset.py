@@ -155,8 +155,7 @@ class LoadDatasetUI(UIBase):
             imgs = dte_instance.get_filtered_imgs(filters=[])
             return (
                 [imgs, []]
-                + filter_by_tags.clear_filters(update_filter_and_gallery)
-                + batch_edit_captions.tag_select_ui_remove.cbg_tags_update()
+                + update_filter_and_gallery()
             )
 
         self.btn_load_datasets.click(

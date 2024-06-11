@@ -138,12 +138,12 @@ def update_gallery():
 
 def update_filter_and_gallery():
     return (
-        ui.filter_by_tags.tag_filter_ui.cbg_tags_update()
-        + ui.filter_by_tags.tag_filter_ui_neg.cbg_tags_update()
+        [ui.filter_by_tags.tag_filter_ui.cbg_tags_update()]
+        + [ui.filter_by_tags.tag_filter_ui_neg.cbg_tags_update()]
         + update_gallery()
         + ui.batch_edit_captions.get_common_tags(get_filters, ui.filter_by_tags)
         + [", ".join(ui.filter_by_tags.tag_filter_ui.filter.tags)]
-        + ui.batch_edit_captions.tag_select_ui_remove.cbg_tags_update()
+        + [ui.batch_edit_captions.tag_select_ui_remove.cbg_tags_update()]
         + ["", ""]
     )
 
@@ -338,12 +338,10 @@ def on_ui_tabs():
 
         o_update_filter_and_gallery = (
             [
-                ui.filter_by_tags.tag_filter_ui.cbg_tags,
-                ui.filter_by_tags.tag_filter_ui.tb_search_tags
+                ui.filter_by_tags.tag_filter_ui.cbg_tags
             ]
             + [
-                ui.filter_by_tags.tag_filter_ui_neg.cbg_tags,
-                ui.filter_by_tags.tag_filter_ui_neg.tb_search_tags,
+                ui.filter_by_tags.tag_filter_ui_neg.cbg_tags
             ]
             + o_update_gallery
             + [
@@ -352,8 +350,7 @@ def on_ui_tabs():
             ]
             + [ui.batch_edit_captions.tb_sr_selected_tags]
             + [
-                ui.batch_edit_captions.tag_select_ui_remove.cbg_tags,
-                ui.batch_edit_captions.tag_select_ui_remove.tb_search_tags
+                ui.batch_edit_captions.tag_select_ui_remove.cbg_tags
             ]
             + [
                 ui.edit_caption_of_selected_image.tb_caption,
@@ -375,7 +372,6 @@ def on_ui_tabs():
         ui.gallery_state.set_callbacks(ui.dataset_gallery)
         ui.filter_by_tags.set_callbacks(
             o_update_gallery,
-            o_update_filter_and_gallery,
             ui.batch_edit_captions,
             ui.move_or_delete_files,
             update_gallery,

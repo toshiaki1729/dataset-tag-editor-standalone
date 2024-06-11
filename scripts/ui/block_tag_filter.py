@@ -100,7 +100,7 @@ class TagFilterUI:
         self.after_filter_update_callbacks.append((fn, inputs, outputs, js))
 
     def set_callbacks(self):
-        o_update = [self.cbg_tags, self.tb_search_tags]
+        o_update = self.cbg_tags
 
         self.tb_search_tags.change(
             fn=self.tb_search_tags_changed,
@@ -142,7 +142,7 @@ class TagFilterUI:
         )
 
         self.cbg_tags.change(
-            fn=self.cbg_tags_changed, inputs=[self.cbg_tags], outputs=o_update
+            fn=self.cbg_tags_changed, inputs=self.cbg_tags, outputs=o_update
         )
         for fn, inputs, outputs, js in self.after_filter_update_callbacks:
             self.cbg_tags.change(fn=lambda:None).then(fn=fn, inputs=inputs, outputs=outputs, js=js)
@@ -247,12 +247,10 @@ class TagFilterUI:
         tags = dte_instance.write_tags(tags, self.sort_by)
         tags_in_filter = dte_instance.write_tags(tags_in_filter, self.sort_by)
 
-        return [
-            gr.CheckboxGroup(value=tags_in_filter, choices=tags),
-            self.filter_word
-        ]
+        return gr.CheckboxGroup(value=tags_in_filter, choices=tags)
 
     def clear_filter(self):
         self.filter = TagFilter(logic=self.logic, mode=self.filter_mode)
         self.filter_word = ""
         self.selected_tags = set()
+        return [self.cbg_tags_update()] + [self.filter_word]

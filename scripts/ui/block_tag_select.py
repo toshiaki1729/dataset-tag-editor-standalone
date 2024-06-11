@@ -62,7 +62,7 @@ class TagSelectUI:
         self.cbg_tags = gr.CheckboxGroup(label="Select Tags", interactive=True)
 
     def set_callbacks(self):
-        o_update = [self.cbg_tags, self.tb_search_tags]
+        o_update = self.cbg_tags
         self.tb_search_tags.change(
             fn=self.tb_search_tags_changed,
             inputs=self.tb_search_tags
@@ -164,7 +164,4 @@ class TagSelectUI:
         )
         tags = dte_instance.write_tags(tags, self.sort_by)
         selected_tags = dte_instance.write_tags(list(self.selected_tags), self.sort_by)
-        return [
-            gr.CheckboxGroup(value=selected_tags, choices=tags),
-            self.filter_word
-        ]
+        return gr.CheckboxGroup(value=selected_tags, choices=tags)
