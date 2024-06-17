@@ -33,7 +33,7 @@ PyTorch version mostly depends on [transformers](https://github.com/huggingface/
 
 If you want to use DirectML, please install manually in venv  (install [pytorch-directml](https://pypi.org/project/pytorch-directml/) to enable, **not tested**).
 
-This script will install [ONNX runtime](https://onnxruntime.ai/) **automatically** before using wd-taggers by SmilingWolf.
+This script will install [ONNX runtime](https://onnxruntime.ai/) **automatically** in `venv` before using wd-taggers by SmilingWolf.
 
 ## Installation
 ### Windows
