@@ -1,6 +1,7 @@
 from PIL import Image
 import numpy as np
 from typing import Tuple
+import torch
 
 import launch, utilities, settings, devices
 from paths import paths
@@ -32,7 +33,6 @@ class WaifuDiffusionTagger:
                 ]
 
             def check_available_device():
-                import torch
 
                 if torch.cuda.is_available():
                     return "cuda"
@@ -69,6 +69,8 @@ class WaifuDiffusionTagger:
                     )
             import onnxruntime as ort
 
+            print(f"Running ONNX on {ort.get_device()}")
+            
             self.model = ort.InferenceSession(path_model, providers=providers)
 
         path_label = huggingface_hub.hf_hub_download(
