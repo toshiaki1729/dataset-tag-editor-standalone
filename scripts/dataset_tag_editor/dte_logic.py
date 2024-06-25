@@ -2,6 +2,9 @@ from pathlib import Path
 import re, sys
 from typing import Optional, Iterable
 from enum import Enum
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
+
 from PIL import Image
 import traceback
 from multiprocessing import Pool
@@ -40,9 +43,6 @@ def get_square_rgb(data:Image.Image):
 def load_image(img_path: Path, max_res: float, use_temp_dir: bool):
     try:
         img = Image.open(img_path)
-        if (max_res > 0):
-            img_res = int(max_res), int(max_res)
-            img.thumbnail(img_res)
     except:
         return None
     abs_path = str(img_path.absolute())
@@ -738,18 +738,32 @@ class DatasetTagEditor(Singleton):
         def load_images(filepaths: list[Path]):
             logger.write("Loading and checking images...")
             imgpaths = []
-            images = dict()
+            images_raw = dict()
             result = process_pool.map(load_image_wrapper, [(path, max_res, use_temp_dir) for path in filepaths])
             result = [r for r in result if r]
 
             for img_path, img in result:
                 imgpaths.append(img_path)
-                images[img_path] = img
                 if not use_temp_dir and max_res <= 0:
                     img.already_saved_as = img_path
+                images_raw[img_path] = img
             
             logger.write(f"Total {len(imgpaths)} valid images")
-            return imgpaths, images
+            return imgpaths, images_raw
+        
+        def load_thumbnails(images_raw: dict[str, Image.Image]):
+            images = {}
+            if max_res > 0:
+                for img_path, img in images_raw.items():
+                    img_res = int(max_res), int(max_res)
+                    images[img_path] = img.copy()
+                    images[img_path].thumbnail(img_res)
+            else:
+                for img_path, img in images_raw.items():
+                    if not use_temp_dir:
+                        img.already_saved_as = img_path
+                    images[img_path] = img
+            return images
 
         def load_captions(imgpaths: list[str]):
             taglists = []
@@ -794,12 +808,13 @@ class DatasetTagEditor(Singleton):
                         tagger_thresholds.append((it, None))
         try:
             if kohya_json_path:
-                imgpaths, self.images, taglists = kohya_metadata.read(
+                imgpaths, images_raw, taglists = kohya_metadata.read(
                     img_dir, kohya_json_path, use_temp_dir
                 )
             else:
-                imgpaths, self.images = load_images(filepaths)
+                imgpaths, images_raw = load_images(filepaths)
                 taglists = load_captions(imgpaths)
+            self.images = load_thumbnails(images_raw)
         except Exception as e:
             logger.error(f"Cannot load dataset from directory: {self.dataset_dir}")
             logger.error(e)
@@ -822,7 +837,7 @@ class DatasetTagEditor(Singleton):
             logger.write("Preprocessing images...")
             def gen_data():
                 for img_path in img_to_interrogate:
-                    yield self.images.get(img_path)
+                    yield images_raw[img_path]
             try:
                 result = process_pool.map(get_square_rgb, gen_data())
             except Exception as e:
