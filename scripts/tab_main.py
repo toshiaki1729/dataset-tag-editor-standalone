@@ -375,7 +375,6 @@ def on_ui_tabs():
             ui.batch_edit_captions,
             ui.move_or_delete_files,
             update_gallery,
-            update_filter_and_gallery,
             get_filters
         )
         ui.filter_by_selection.set_callbacks(

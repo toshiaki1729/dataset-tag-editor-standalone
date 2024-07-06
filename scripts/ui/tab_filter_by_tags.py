@@ -72,7 +72,6 @@ class FilterByTagsUI(UIBase):
         batch_edit_captions: BatchEditCaptionsUI,
         move_or_delete_files: MoveOrDeleteFilesUI,
         update_gallery: Callable[[], list],
-        update_filter_and_gallery: Callable[[], list],
         get_filters: Callable[[], list[dte_module.filters.Filter]]
     ):
         common_callback = (
@@ -107,7 +106,7 @@ class FilterByTagsUI(UIBase):
         o_clear_filters = [self.tag_filter_ui.cbg_tags, self.tag_filter_ui.tb_search_tags] + [self.tag_filter_ui_neg.cbg_tags, self.tag_filter_ui_neg.tb_search_tags]
 
         self.btn_clear_tag_filters.click(
-            fn=lambda: self.clear_filters(update_filter_and_gallery),
+            fn=lambda: self.clear_filters(),
             outputs=o_clear_filters,
         ).then(
             fn = lambda: common_callback(),
@@ -116,7 +115,7 @@ class FilterByTagsUI(UIBase):
         )
 
         self.btn_clear_all_filters.click(
-            fn=lambda: self.clear_filters(update_filter_and_gallery),
+            fn=lambda: self.clear_filters(),
             outputs=o_clear_filters,
         ).then(
             fn = lambda: common_callback(),
