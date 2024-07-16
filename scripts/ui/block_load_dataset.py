@@ -186,7 +186,7 @@ class LoadDatasetUI(UIBase):
             dte_instance.clear()
             return (
                 [[], []]
-                + filter_by_tags.clear_filters(update_filter_and_gallery)
+                + filter_by_tags.clear_filters()
                 + batch_edit_captions.tag_select_ui_remove.cbg_tags_update()
             )
 
