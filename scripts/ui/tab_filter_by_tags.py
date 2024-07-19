@@ -125,3 +125,6 @@ class FilterByTagsUI(UIBase):
 
     def clear_filters(self):
         return self.tag_filter_ui.clear_filter() + self.tag_filter_ui_neg.clear_filter()
+    
+    def clear_filters_output(self):
+        return self.tag_filter_ui.clear_filter_output() + self.tag_filter_ui_neg.clear_filter_output()

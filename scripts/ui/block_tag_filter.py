@@ -254,3 +254,6 @@ class TagFilterUI:
         self.filter_word = ""
         self.selected_tags = set()
         return [self.cbg_tags_update()] + [self.filter_word]
+    
+    def clear_filter_output(self):
+        return [self.cbg_tags, self.tb_search_tags]
