@@ -3,7 +3,7 @@ transformers>=4.27.4
 requests
 pillow
 numpy
-torch>=2.0.0
+torch>=1.7
 torchvision
 tqdm
 timm>=1.0.8
