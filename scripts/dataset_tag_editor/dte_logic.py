@@ -92,12 +92,16 @@ class DatasetTagEditor(Singleton):
         logger.write(f"Custom taggers loaded: {[tagger().name() for tagger in custom_taggers]}")
 
         def read_wd_batchsize(name:str):
-            if "vit" in name:
+            if "vit-large" in name:
+                return settings.current.batch_size_vit_large
+            elif "vit" in name:
                 return settings.current.batch_size_vit
             elif "convnext" in name:
                 return settings.current.batch_size_convnext
             elif "swinv2" in name:
                 return settings.current.batch_size_swinv2
+            elif "eva02-large" in name:
+                return settings.current.batch_size_eva02_large
 
         self.INTERROGATORS = (
             [taggers_builtin.BLIP()]
