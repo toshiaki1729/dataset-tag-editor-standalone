@@ -28,7 +28,7 @@ All requirements are listed in `requirements.txt`
 
 **Please install the followings first:**  
 - [Python](https://www.python.org/) >= 3.9 (Developed on 3.10.11)  
-- [PyTorch](https://pytorch.org/) with CUDA >= 1.10.0 ([onnx-pytorch](https://github.com/fumihwh/onnx-pytorch) requirement; for [TorchDeepDanbooru](https://github.com/AUTOMATIC1111/TorchDeepDanbooru))  
+- [PyTorch](https://pytorch.org/) with CUDA >= 1.7 ([timm](https://github.com/huggingface/pytorch-image-models) requirement)  
 PyTorch version mostly depends on [transformers](https://github.com/huggingface/transformers), please follow [the instruction to install transformers](https://github.com/huggingface/transformers#installation) if install specific version manually.
 
 If you want to use DirectML, please install manually in venv  (install [pytorch-directml](https://pypi.org/project/pytorch-directml/) to enable, **not tested**).
