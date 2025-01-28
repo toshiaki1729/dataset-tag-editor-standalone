@@ -1,24 +1,26 @@
-from collections import namedtuple
 import mimetypes
 import os
-from pathlib import Path
 import signal
 import sys
-import time
 import tempfile
+import time
+from collections import namedtuple
+from pathlib import Path
 
-from PIL import PngImagePlugin, Image
-
+import cmd_args
 import gradio as gr
 import gradio.routes
 import gradio.utils
-
-from dte_instance import dte_instance
-
-import tab_main, tab_settings, cmd_args, utilities, logger, launch, settings
+import launch
+import logger
 import paths
+import settings
+import tab_main
+import tab_settings
+import utilities
+from dte_instance import dte_instance
+from PIL import Image, PngImagePlugin
 from shared_state import state
-
 
 # ================================================================
 # brought from AUTOMATIC1111/stable-diffusion-webui and modified
@@ -55,7 +57,7 @@ def save_pil_to_cache(pil_image: Image.Image, *args, **kwargs):
     if already_saved_as and os.path.isfile(already_saved_as):
         register_tmp_file(interface, already_saved_as)
         return str(Path(already_saved_as).resolve())
-    
+
     tmpdir = state.temp_dir
     use_metadata = False
     metadata = PngImagePlugin.PngInfo()
@@ -73,7 +75,7 @@ def save_pil_to_cache(pil_image: Image.Image, *args, **kwargs):
     pil_image.save(file_obj, pnginfo=(metadata if use_metadata else None))
 
     pil_image.already_saved_as = file_obj.name
-    
+
     return file_obj.name
 
 
@@ -85,12 +87,14 @@ def save_file_to_cache_cacheonce(file_path: str | Path, cache_dir: str) -> str:
     """Returns a temporary file path for a copy of the given file path if it does
     not already exist. Otherwise returns the path to the existing temp file."""
     import hashlib
+
     filename = hashlib.md5(file_path.encode()).hexdigest()
     temp_dir = Path(cache_dir)
     temp_dir.mkdir(exist_ok=True, parents=True)
-    
-    from gradio_client import utils as client_utils
+
     import shutil
+
+    from gradio_client import utils as client_utils
 
     filename = client_utils.strip_invalid_filename_characters(filename)
     full_temp_file_path = str(Path(temp_dir / filename).resolve())
@@ -106,37 +110,10 @@ def webpath(fn: Path):
     return f"file={path}?{os.path.getmtime(fn)}"
 
 
-def javascript_html():
-    js_path = utilities.base_dir_path() / "javascript"
-    head = ""
-    for p in sorted(js_path.glob("*.js")):
-        if not p.is_file():
-            continue
-        head += f'<script type="text/javascript" src="{webpath(p)}"></script>\n'
-
-    return head
-
-
-def css_html():
-    css_path = utilities.base_dir_path() / "css"
-    head = ""
-
-    for p in sorted(css_path.glob("*.css")):
-        if not p.is_file():
-            continue
-        head += f'<link rel="stylesheet" property="stylesheet" href="{webpath(p)}">'
-
-    return head
-
-
 def reload_javascript():
-    js = javascript_html()
-    css = css_html()
 
     def template_response(*args, **kwargs):
         res = GradioTemplateResponseOriginal(*args, **kwargs)
-        res.body = res.body.replace(b"</head>", f"{js}</head>".encode("utf8"))
-        res.body = res.body.replace(b"</body>", f"{css}</body>".encode("utf8"))
         res.init_headers()
         return res
 
@@ -160,7 +137,7 @@ def commit_hash():
 
 
 def versions_html():
-    import torch
+    # import torch
 
     python_version = ".".join([str(x) for x in sys.version_info[0:3]])
     commit = commit_hash()
@@ -168,11 +145,9 @@ def versions_html():
 
     return f"""
 python: <span title="{sys.version}">{python_version}</span>
- • 
-torch: {getattr(torch, '__long_version__',torch.__version__)}
- • 
+ ･
 gradio: {gr.__version__}
- • 
+ ･
 commit: <a href="https://github.com/toshiaki1729/dataset-tag-editor-standalone/commit/{commit}">{short_commit}</a>
 """
 
@@ -213,30 +188,30 @@ def main():
     global interface
 
     def sigint_handler(sig, frame):
-        print(f"Interrupted with signal {sig} in {frame}")
         os._exit(0)
 
     signal.signal(signal.SIGINT, sigint_handler)
 
     while True:
         state.begin()
-        
+
         settings.load()
         paths.paths = paths.Paths()
 
-        state.temp_dir = (utilities.base_dir_path() / "temp").absolute()
-        if settings.current.use_temp_files and settings.current.temp_directory != "":
-            state.temp_dir = Path(settings.current.temp_directory)
-        
-        os.environ['GRADIO_TEMP_DIR'] = state.temp_dir.name
-        
-        # override save function to prevent from making anonying temporaly files
-        gr.gradio.processing_utils.save_pil_to_cache = save_pil_to_cache
-
         if settings.current.use_temp_files:
-            gr.gradio.processing_utils.save_file_to_cache = save_file_to_cache_cacheonce
+            state.temp_dir = Path(
+                settings.current.temp_directory or utilities.base_dir_path() / "temp"
+            ).absolute()
+            os.environ["GRADIO_TEMP_DIR"] = str(state.temp_dir)
         else:
-            gr.gradio.processing_utils.save_file_to_cache = save_file_to_cache_nocache
+            state.temp_dir = None
+            # PILのキャッシュを元のGradioの実装に戻す
+            gr.gradio.processing_utils.save_pil_to_cache = (
+                gr.processing_utils.save_pil_to_cache
+            )
+
+        # ファイルキャッシュの設定は条件に関係なく行われる
+        gr.gradio.processing_utils.save_file_to_cache = save_file_to_cache_nocache
 
         if settings.current.cleanup_tmpdir:
             cleanup_tmpdr()
@@ -245,8 +220,17 @@ def main():
 
         interface = create_ui().queue(64)
 
-        allowed_paths = settings.current.allowed_paths.split(', ')
-        allowed_paths = [str(Path(path).absolute()) for path in allowed_paths] + [utilities.base_dir_path()]
+        # Always allow project root directory
+        project_root = utilities.base_dir_path()
+        allowed_paths = [str(project_root)]
+        if settings.current.allowed_paths:
+            allowed_paths.extend(
+                [
+                    str(Path(path).absolute())
+                    for path in settings.current.allowed_paths.split(", ")
+                ]
+            )
+
         app, _, _ = interface.launch(
             server_port=cmd_args.opts.port,
             server_name=cmd_args.opts.server_name,
@@ -258,7 +242,7 @@ def main():
             ssl_certfile=cmd_args.opts.tls_cert,
             debug=cmd_args.opts.gradio_debug,
             prevent_thread_lock=True,
-            allowed_paths=allowed_paths
+            allowed_paths=allowed_paths,
         )
 
         # Disable a very open middleware as Stable Diffusion web UI does

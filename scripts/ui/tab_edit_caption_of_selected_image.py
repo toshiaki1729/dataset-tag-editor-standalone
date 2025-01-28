@@ -1,13 +1,14 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Callable
-import gradio as gr
 
+from typing import TYPE_CHECKING, Callable
+
+import gradio as gr
 from dte_instance import dte_module
+from tokenizer import clip_tokenizer
 from utilities import wrap_queued_call
 
 from .ui_common import *
 from .uibase import UIBase
-from tokenizer import clip_tokenizer
 
 if TYPE_CHECKING:
     from .ui_classes import *
@@ -28,9 +29,7 @@ class EditCaptionOfSelectedImageUI(UIBase):
                 value=-1, label="hidden_s_or_n"
             )
             self.tb_hidden_edit_caption = gr.Textbox()
-            self.btn_hidden_save_caption = gr.Button(
-                elem_id="btn_hidden_save_caption"
-            )
+            self.btn_hidden_save_caption = gr.Button(elem_id="btn_hidden_save_caption")
         with gr.Tab(label="Read Caption from Selected Image"):
             self.tb_caption = gr.Textbox(
                 label="Caption of Selected Image",
@@ -39,7 +38,9 @@ class EditCaptionOfSelectedImageUI(UIBase):
                 elem_id="dte_caption",
             )
             self.token_counter_caption = gr.HTML(
-                value="<span>0/75</span>", elem_id="dte_caption_counter", elem_classes=["token-counter"]
+                value="<span>0/75</span>",
+                elem_id="dte_caption_counter",
+                elem_classes=["token-counter"],
             )
             with gr.Row():
                 self.btn_copy_caption = gr.Button(value="Copy and Overwrite")
@@ -48,12 +49,25 @@ class EditCaptionOfSelectedImageUI(UIBase):
 
         with gr.Tab(label="Interrogate Selected Image"):
             with gr.Row():
+                # Get available interrogators and ensure they're in a set for O(1) lookup
+                available_interrogators = set(dte_instance.INTERROGATOR_NAMES)
+                # Filter saved value to only include valid ones
+                saved_value = (
+                    cfg_edit_selected.use_interrogator_name
+                    if cfg_edit_selected.use_interrogator_name
+                    in available_interrogators
+                    else None
+                )
+
                 self.dd_intterogator_names_si = gr.Dropdown(
                     label="Interrogator",
-                    choices=dte_instance.INTERROGATOR_NAMES,
-                    value=cfg_edit_selected.use_interrogator_name,
+                    choices=list(
+                        available_interrogators
+                    ),  # Convert back to list for display
+                    value=saved_value,
                     interactive=True,
                     multiselect=False,
+                    allow_custom_value=True,
                 )
                 self.btn_interrogate_si = gr.Button(value="Interrogate")
             with gr.Column():
@@ -64,7 +78,9 @@ class EditCaptionOfSelectedImageUI(UIBase):
                     elem_id="dte_interrogate",
                 )
                 self.token_counter_interrogate = gr.HTML(
-                    value="<span>0/75</span>", elem_id="dte_interrogate_counter", elem_classes=["token-counter"]
+                    value="<span>0/75</span>",
+                    elem_id="dte_interrogate_counter",
+                    elem_classes=["token-counter"],
                 )
             with gr.Row():
                 self.btn_copy_interrogate = gr.Button(value="Copy and Overwrite")
@@ -103,7 +119,9 @@ class EditCaptionOfSelectedImageUI(UIBase):
                 elem_id="dte_edit_caption",
             )
             self.token_counter_edit_caption = gr.HTML(
-                value="<span>0/75</span>", elem_id="dte_edit_caption_counter", elem_classes=["token-counter"]
+                value="<span>0/75</span>",
+                elem_id="dte_edit_caption_counter",
+                elem_classes=["token-counter"],
             )
         self.btn_apply_changes_selected_image = gr.Button(
             value="Apply changes to selected image", variant="primary"
@@ -152,16 +170,17 @@ class EditCaptionOfSelectedImageUI(UIBase):
                     dte_instance.get_tags_by_image_path(img_paths[self.current_idx])
                 )
 
-            return \
+            return (
                 [
                     self.prev_idx
                     if warn_change_not_saved
                     and edit_caption != prev_tags_txt
                     and not self.change_is_saved
                     else -1
-                ]\
-                + [next_tags_txt, next_tags_txt if copy_automatically else edit_caption]\
+                ]
+                + [next_tags_txt, next_tags_txt if copy_automatically else edit_caption]
                 + [edit_caption]
+            )
 
         self.nb_hidden_image_index_save_or_not.change(
             fn=lambda a: None,
@@ -237,9 +256,7 @@ class EditCaptionOfSelectedImageUI(UIBase):
         ):
             if not interrogator_name:
                 return ""
-            threshold_booru = (
-                threshold_booru
-            )
+            threshold_booru = threshold_booru
             threshold_waifu = threshold_waifu if use_threshold_waifu else -1
             return dte_instance.interrogate_image(
                 dataset_gallery.selected_path,
@@ -298,7 +315,7 @@ class EditCaptionOfSelectedImageUI(UIBase):
                 self.rb_sort_by,
                 self.rb_sort_order,
             ],
-            outputs=o_update_filter_and_gallery
+            outputs=o_update_filter_and_gallery,
         )
 
         def apply_chages_all(tags_text: str, sort: bool, sort_by: str, sort_order: str):
@@ -325,7 +342,7 @@ class EditCaptionOfSelectedImageUI(UIBase):
                 self.rb_sort_by,
                 self.rb_sort_order,
             ],
-            outputs=o_update_filter_and_gallery
+            outputs=o_update_filter_and_gallery,
         )
 
         self.cb_sort_caption_on_save.change(

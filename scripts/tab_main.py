@@ -178,25 +178,26 @@ def on_ui_tabs():
                 btn_restore_default = gr.Button(value="Restore settings to default")
 
         with gr.Row(equal_height=False):
-            with gr.Column():
+            with gr.Column(scale=2):
                 ui.load_dataset.create_ui(cfg_general)
                 ui.dataset_gallery.create_ui(settings.current.image_columns, get_filters)
                 ui.gallery_state.create_ui()
 
-            with gr.Tab(label="Filter by Tags"):
-                ui.filter_by_tags.create_ui(cfg_filter_p, cfg_filter_n, get_filters)
+            with gr.Column(scale=2):  # 右側のタブコンテナ（1/4の幅）
+                with gr.Tab(label="Filter by Tags"):
+                    ui.filter_by_tags.create_ui(cfg_filter_p, cfg_filter_n, get_filters)
 
-            with gr.Tab(label="Filter by Selection"):
-                ui.filter_by_selection.create_ui(settings.current.image_columns)
+                with gr.Tab(label="Filter by Selection"):
+                    ui.filter_by_selection.create_ui(settings.current.image_columns)
 
-            with gr.Tab(label="Batch Edit Captions"):
-                ui.batch_edit_captions.create_ui(cfg_batch_edit, get_filters)
+                with gr.Tab(label="Batch Edit Captions"):
+                    ui.batch_edit_captions.create_ui(cfg_batch_edit, get_filters)
 
-            with gr.Tab(label="Edit Caption of Selected Image"):
-                ui.edit_caption_of_selected_image.create_ui(cfg_edit_selected)
+                with gr.Tab(label="Edit Caption of Selected Image"):
+                    ui.edit_caption_of_selected_image.create_ui(cfg_edit_selected)
 
-            with gr.Tab(label="Move or Delete Files"):
-                ui.move_or_delete_files.create_ui(cfg_file_move_delete)
+                with gr.Tab(label="Move or Delete Files"):
+                    ui.move_or_delete_files.create_ui(cfg_file_move_delete)
 
         # ----------------------------------------------------------------
         # General

@@ -1,10 +1,10 @@
-gradio==4.28.3
-transformers>=4.27.4
+gradio
+transformers
 requests
 pillow
 numpy
-torch>=1.7
+torch
 torchvision
 tqdm
-timm>=1.0.8
+timm
 print-color

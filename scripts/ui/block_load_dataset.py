@@ -1,8 +1,10 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Callable
-import gradio as gr
 
+from typing import TYPE_CHECKING, Callable
+
+import gradio as gr
 import settings
+
 from .ui_common import *
 from .uibase import UIBase
 
@@ -11,7 +13,6 @@ if TYPE_CHECKING:
 
 
 class LoadDatasetUI(UIBase):
-
     def create_ui(self, cfg_general):
         with gr.Column(variant="panel"):
             with gr.Row():
@@ -57,12 +58,24 @@ class LoadDatasetUI(UIBase):
                             value=cfg_general.use_interrogator,
                             label="Use Interrogator Caption",
                         )
+                        # Get available interrogators and ensure they're in a set for O(1) lookup
+                        available_interrogators = set(dte_instance.INTERROGATOR_NAMES)
+                        # Filter saved values to only include valid ones
+                        saved_values = [
+                            val
+                            for val in (cfg_general.use_interrogator_names or [])
+                            if val in available_interrogators
+                        ]
+
                         self.dd_intterogator_names = gr.Dropdown(
                             label="Interrogators",
-                            choices=dte_instance.INTERROGATOR_NAMES,
-                            value=cfg_general.use_interrogator_names,
+                            choices=list(
+                                available_interrogators
+                            ),  # Convert back to list for display
+                            value=saved_values,
                             interactive=True,
                             multiselect=True,
+                            allow_custom_value=True,
                         )
             with gr.Accordion(label="Interrogator Settings", open=False):
                 with gr.Row():
@@ -134,29 +147,32 @@ class LoadDatasetUI(UIBase):
                 interrogate_method = dte_instance.InterrogateMethod.APPEND
 
             threshold_booru = custom_threshold_booru
-            threshold_waifu = custom_threshold_waifu if use_custom_threshold_waifu else -1
+            threshold_waifu = (
+                custom_threshold_waifu if use_custom_threshold_waifu else -1
+            )
             threshold_z3d = custom_threshold_z3d
 
-            dte_instance.load_dataset(
-                dir,
-                caption_file_ext,
-                recursive,
-                load_caption_from_filename,
-                replace_new_line,
-                interrogate_method,
-                use_interrogator_names,
-                threshold_booru,
-                threshold_waifu,
-                threshold_z3d,
-                settings.current.use_temp_files,
-                kohya_json_path if use_kohya_metadata else None,
-                settings.current.max_resolution
-            )
-            imgs = dte_instance.get_filtered_imgs(filters=[])
-            return (
-                [imgs, []]
-                + update_filter_and_gallery()
-            )
+            try:
+                dte_instance.load_dataset(
+                    dir,
+                    caption_file_ext,
+                    recursive,
+                    load_caption_from_filename,
+                    replace_new_line,
+                    interrogate_method,
+                    use_interrogator_names,
+                    threshold_booru,
+                    threshold_waifu,
+                    threshold_z3d,
+                    settings.current.use_temp_files,
+                    kohya_json_path if use_kohya_metadata else None,
+                    settings.current.max_resolution,
+                )
+                imgs = dte_instance.get_filtered_imgs(filters=[])
+                return [imgs, []] + update_filter_and_gallery()
+            except Exception as e:
+                print(f"Error loading dataset: {str(e)}")
+                raise e
 
         self.btn_load_datasets.click(
             fn=load_files_from_dir,
@@ -183,12 +199,16 @@ class LoadDatasetUI(UIBase):
         )
 
         def unload_files():
-            dte_instance.clear()
-            return (
-                [[], []]
-                + filter_by_tags.clear_filters()
-                + [batch_edit_captions.tag_select_ui_remove.cbg_tags_update()]
-            )
+            try:
+                dte_instance.clear()
+                return (
+                    [[], []]
+                    + filter_by_tags.clear_filters()
+                    + [batch_edit_captions.tag_select_ui_remove.cbg_tags_update()]
+                )
+            except Exception as e:
+                print(f"Error unloading dataset: {str(e)}")
+                raise e
 
         self.btn_unload_datasets.click(
             fn=unload_files,
@@ -197,8 +217,7 @@ class LoadDatasetUI(UIBase):
                 filter_by_selection.gl_filter_images,
             ]
             + filter_by_tags.clear_filters_output()
-            + [batch_edit_captions.tag_select_ui_remove.cbg_tags]
+            + [batch_edit_captions.tag_select_ui_remove.cbg_tags],
         ).then(
-            fn=lambda:update_filter_and_gallery(),
-            outputs=o_update_filter_and_gallery
+            fn=lambda: update_filter_and_gallery(), outputs=o_update_filter_and_gallery
         )

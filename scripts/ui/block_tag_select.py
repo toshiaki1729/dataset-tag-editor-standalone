@@ -67,24 +67,43 @@ class TagSelectUI:
             fn=self.tb_search_tags_changed,
             inputs=self.tb_search_tags
         ).then(
-            fn=self.cbg_tags_update, outputs=o_update
+            fn=self.cbg_tags_update,
+            outputs=o_update
         )
         self.cb_prefix.change(
-            fn=self.cb_prefix_changed, inputs=self.cb_prefix, outputs=o_update
+            fn=self.cb_prefix_changed,
+            inputs=self.cb_prefix
+        ).then(
+            fn=self.cbg_tags_update,
+            outputs=o_update
         )
         self.cb_suffix.change(
-            fn=self.cb_suffix_changed, inputs=self.cb_suffix, outputs=o_update
+            fn=self.cb_suffix_changed,
+            inputs=self.cb_suffix
+        ).then(
+            fn=self.cbg_tags_update,
+            outputs=o_update
         )
         self.cb_regex.change(
-            fn=self.cb_regex_changed, inputs=self.cb_regex, outputs=o_update
+            fn=self.cb_regex_changed,
+            inputs=self.cb_regex
+        ).then(
+            fn=self.cbg_tags_update,
+            outputs=o_update
         )
         self.rb_sort_by.change(
-            fn=self.rd_sort_by_changed, inputs=self.rb_sort_by, outputs=o_update
+            fn=self.rd_sort_by_changed,
+            inputs=self.rb_sort_by
+        ).then(
+            fn=self.cbg_tags_update,
+            outputs=o_update
         )
         self.rb_sort_order.change(
             fn=self.rd_sort_order_changed,
-            inputs=self.rb_sort_order,
-            outputs=o_update,
+            inputs=self.rb_sort_order
+        ).then(
+            fn=self.cbg_tags_update,
+            outputs=o_update
         )
         self.btn_select_visibles.click(
             fn=self.btn_select_visibles_clicked, outputs=o_update
@@ -103,23 +122,18 @@ class TagSelectUI:
 
     def cb_prefix_changed(self, prefix: bool):
         self.prefix = prefix
-        return self.cbg_tags_update()
 
     def cb_suffix_changed(self, suffix: bool):
         self.suffix = suffix
-        return self.cbg_tags_update()
 
     def cb_regex_changed(self, regex: bool):
         self.regex = regex
-        return self.cbg_tags_update()
 
     def rd_sort_by_changed(self, rb_sort_by: str):
         self.sort_by = rb_sort_by
-        return self.cbg_tags_update()
 
     def rd_sort_order_changed(self, rd_sort_order: str):
         self.sort_order = rd_sort_order
-        return self.cbg_tags_update()
 
     def cbg_tags_changed(self, cbg_tags: list[str]):
         self.selected_tags = set(dte_instance.read_tags(cbg_tags))

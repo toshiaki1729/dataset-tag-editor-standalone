@@ -9,6 +9,11 @@ parser.add_argument(
     default=False,
 )
 parser.add_argument(
+    "--shadow-gradio-output",
+    action="store_true",
+    default=False,
+)
+parser.add_argument(
     "--port", type=int, help="Launch gradio with given port number", default=None
 )
 parser.add_argument(
@@ -22,6 +27,11 @@ parser.add_argument(
     type=str,
     help="Certification file for TLS, also requires --tls-key to enable TLS",
     default=None,
+)
+parser.add_argument(
+    "--root-path",
+    type=str,
+    default=""
 )
 parser.add_argument(
     "--gradio-debug",
