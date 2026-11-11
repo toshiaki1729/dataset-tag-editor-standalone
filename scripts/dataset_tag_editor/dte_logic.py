@@ -51,6 +51,33 @@ def load_image(img_path: Path, max_res: float, use_temp_dir: bool):
 
 def load_image_wrapper(args):
     return load_image(*args)
+
+
+# [PERF] multiprocessing workers. The original implementation pickled
+# full-resolution images from worker processes back to the main process,
+# which dominates the loading time of large datasets. Instead:
+# - max_res > 0 : workers decode + downscale, only small thumbnails travel back
+# - max_res <= 0: workers only verify files; the main process opens lazy
+#   handles so gradio can serve the original files directly (no temp files)
+def verify_image_worker(abs_path: str):
+    try:
+        with Image.open(abs_path) as img:
+            img.verify()
+        return abs_path
+    except Exception:
+        return None
+
+
+def load_thumbnail_worker(args):
+    abs_path, max_res = args
+    try:
+        with Image.open(abs_path) as img:
+            img.verify()
+        img = Image.open(abs_path)
+        img.thumbnail((int(max_res), int(max_res)))
+        return abs_path, img
+    except Exception:
+        return None
      
 
 class DatasetTagEditor(Singleton):
@@ -85,6 +112,9 @@ class DatasetTagEditor(Singleton):
         self.images = {}
         self.tag_tokens = {}
         self.raw_clip_token_used = None
+        # [PERF] caption signature per image at last load/save,
+        # used to skip writing unchanged files
+        self._load_signatures = {}
         
     def load_interrogators(self):
         custom_tagger_scripts = CustomScripts(paths.userscript_path / "taggers")
@@ -157,9 +187,12 @@ class DatasetTagEditor(Singleton):
     def get_tags_by_image_path(self, imgpath: str):
         return self.dataset.get_data_tags(imgpath)
 
-    def set_tags_by_image_path(self, imgpath: str, tags: list[str]):
+    def set_tags_by_image_path(self, imgpath: str, tags: list[str], rebuild: bool = True):
         self.dataset.append_data(ds.Data(imgpath, ",".join(tags)))
-        self.construct_tag_infos()
+        # [PERF] batch operations pass rebuild=False and call
+        # construct_tag_infos() once at the end instead of per image
+        if rebuild:
+            self.construct_tag_infos()
 
     def write_tags(self, tags: list[str], sort_by: SortBy = SortBy.FREQ):
         sort_by = self.SortBy(sort_by)
@@ -325,6 +358,9 @@ class DatasetTagEditor(Singleton):
         result = filtered_set.get_tagset()
         for d in filtered_set.datas.values():
             result &= d.tagset
+            # [PERF] early exit: intersection can only shrink
+            if not result:
+                break
 
         return sorted(result)
 
@@ -359,6 +395,7 @@ class DatasetTagEditor(Singleton):
                 tags_to_append + tags_replaced
                 if prepend
                 else tags_replaced + tags_to_append,
+                rebuild=False,
             )
 
         self.construct_tag_infos()
@@ -402,7 +439,7 @@ class DatasetTagEditor(Singleton):
                     for t in caption.replace(search_text, replace_text).split(",")
                 ]
             caption = [t for t in caption if t]
-            self.set_tags_by_image_path(img_path, caption)
+            self.set_tags_by_image_path(img_path, caption, rebuild=False)
 
         self.construct_tag_infos()
 
@@ -421,7 +458,7 @@ class DatasetTagEditor(Singleton):
             tags = self.search_and_replace_tag_list(
                 search_text, replace_text, tags, selected_tags, use_regex
             )
-            self.set_tags_by_image_path(img_path, tags)
+            self.set_tags_by_image_path(img_path, tags, rebuild=False)
 
         self.construct_tag_infos()
 
@@ -487,21 +524,76 @@ class DatasetTagEditor(Singleton):
             for t in tags:
                 if t not in res:
                     res.append(t)
-            self.set_tags_by_image_path(path, res)
+            self.set_tags_by_image_path(path, res, rebuild=False)
+        self.construct_tag_infos()
+
+    def smart_dedup_tags(
+        self,
+        filters: list[filters.Filter] = [],
+        mode: str = "rules",
+        llm_options: Optional[dict] = None,
+        rules_path: Optional[str] = None,
+        apply: bool = True,
+    ):
+        """Remove generic tags subsumed by more specific ones in each caption.
+
+        mode: "rules" (offline implication table) or "llm" (chat API).
+        With apply=False nothing is modified; the planned removals are only
+        returned (preview). Returns [(img_path, [removed tags]), ...].
+        """
+        from . import tag_dedup
+
+        img_paths = self.get_filtered_imgpaths(filters)
+        rules = tag_dedup.load_rules(rules_path) if mode != "llm" else None
+        cache: dict[tuple, list[str]] = {}
+        details = []
+        self.last_dedup_errors: list[str] = []
+        changed = 0
+        removed_total = 0
+        for path in img_paths:
+            tags = self.dataset.get_data_tags(path)
+            key = tuple(sorted(tag_dedup.normalize(t) for t in tags))
+            if key not in cache:
+                try:
+                    cache[key] = tag_dedup.compute_removals(
+                        tags, mode=mode, rules=rules, llm_options=llm_options
+                    )
+                except Exception as e:
+                    logger.error(e)
+                    self.last_dedup_errors.append(str(e))
+                    cache[key] = []
+            removals = cache[key]
+            if removals:
+                details.append((path, removals))
+                if apply:
+                    self.set_tags_by_image_path(
+                        path, [t for t in tags if t not in removals], rebuild=False
+                    )
+                    changed += 1
+                    removed_total += len(removals)
+        if apply:
+            self.construct_tag_infos()
+            logger.write(
+                f"Smart dedup ({mode}): removed {removed_total} tags "
+                f"from {changed}/{len(img_paths)} images"
+            )
+        return details
 
     def remove_tags(self, tags: set[str], filters: list[filters.Filter] = []):
         img_paths = self.get_filtered_imgpaths(filters)
         for path in img_paths:
             res = self.dataset.get_data_tags(path)
             res = [t for t in res if t not in tags]
-            self.set_tags_by_image_path(path, res)
+            self.set_tags_by_image_path(path, res, rebuild=False)
+        self.construct_tag_infos()
 
     def sort_filtered_tags(self, filters: list[filters.Filter] = [], **sort_args):
         img_paths = self.get_filtered_imgpaths(filters)
         for path in img_paths:
             tags = self.dataset.get_data_tags(path)
             res = self.sort_tags(tags, **sort_args)
-            self.set_tags_by_image_path(path, res)
+            self.set_tags_by_image_path(path, res, rebuild=False)
+        self.construct_tag_infos()
         logger.write(
             f'Tags are sorted by {sort_args.get("sort_by").value} ({sort_args.get("sort_order").value})'
         )
@@ -519,7 +611,7 @@ class DatasetTagEditor(Singleton):
                     res.append(tag)
                 else:
                     break
-            self.set_tags_by_image_path(path, res)
+            self.set_tags_by_image_path(path, res, rebuild=False)
 
         self.construct_tag_infos()
         logger.write(f"Tags are truncated into token count <= {max_token_count}")
@@ -734,7 +826,6 @@ class DatasetTagEditor(Singleton):
         if opts.profile:
             timestamp(epoch_ns, "Create process pool")
             epoch_ns = time.time_ns()
-
         logger.write(
             f"Total {len(filepaths)} files under the directory including not image files."
         )
@@ -743,31 +834,41 @@ class DatasetTagEditor(Singleton):
             logger.write("Loading and checking images...")
             imgpaths = []
             images_raw = dict()
-            result = process_pool.map(load_image_wrapper, [(path, max_res, use_temp_dir) for path in filepaths])
-            result = [r for r in result if r]
+            if max_res > 0:
+                # decode + downscale in parallel workers
+                result = process_pool.map(
+                    load_thumbnail_worker, [(str(p), max_res) for p in filepaths]
+                )
+                for r in result:
+                    if not r:
+                        continue
+                    img_path, img = r
+                    imgpaths.append(img_path)
+                    images_raw[img_path] = img
+            else:
+                # verify in parallel, keep lazy handles in the main process
+                verified = process_pool.map(
+                    verify_image_worker, [str(p) for p in filepaths]
+                )
+                for abs_path in verified:
+                    if abs_path is None:
+                        continue
+                    try:
+                        img = Image.open(abs_path)
+                    except Exception:
+                        continue
+                    imgpaths.append(abs_path)
+                    if not use_temp_dir:
+                        img.already_saved_as = abs_path
+                    images_raw[abs_path] = img
 
-            for img_path, img in result:
-                imgpaths.append(img_path)
-                if not use_temp_dir and max_res <= 0:
-                    img.already_saved_as = img_path
-                images_raw[img_path] = img
-            
             logger.write(f"Total {len(imgpaths)} valid images")
             return imgpaths, images_raw
         
         def load_thumbnails(images_raw: dict[str, Image.Image]):
-            images = {}
-            if max_res > 0:
-                for img_path, img in images_raw.items():
-                    img_res = int(max_res), int(max_res)
-                    images[img_path] = img.copy()
-                    images[img_path].thumbnail(img_res)
-            else:
-                for img_path, img in images_raw.items():
-                    if not use_temp_dir:
-                        img.already_saved_as = img_path
-                    images[img_path] = img
-            return images
+            # [PERF] thumbnails are already produced in workers (max_res > 0)
+            # or lazy handles are kept as-is; nothing left to do here
+            return images_raw
 
         def load_captions(imgpaths: list[str]):
             taglists = []
@@ -893,7 +994,8 @@ class DatasetTagEditor(Singleton):
             elif interrogate_method != self.InterrogateMethod.PREFILL:
                 tags = tags + interrogate_tags[img_path]
 
-            self.set_tags_by_image_path(img_path, tags)
+            self.set_tags_by_image_path(img_path, tags, rebuild=False)
+            self._load_signatures[img_path] = ", ".join(tags)
 
         for i, path in enumerate(sorted(self.dataset.datas.keys())):
             self.img_idx[path] = i
@@ -929,9 +1031,21 @@ class DatasetTagEditor(Singleton):
 
         saved_num = 0
         backup_num = 0
+        skipped_num = 0
         for data in self.dataset.datas.values():
             img_path, tags = Path(data.imgpath), data.tags
+            caption_text = ", ".join(tags)
             txt_path = img_path.with_suffix(caption_ext)
+            # [PERF] skip files whose caption has not changed since last
+            # load/save (the original version rewrote every file on each save).
+            # Files without an existing caption file are always written so that
+            # "load caption from filename" -> save still creates the txt files.
+            if (
+                caption_text == self._load_signatures.get(data.imgpath)
+                and txt_path.is_file()
+            ):
+                skipped_num += 1
+                continue
             # make backup
             if backup and txt_path.is_file():
                 for extnum in range(1000):
@@ -954,17 +1068,18 @@ class DatasetTagEditor(Singleton):
                         backup_num += 1
             # save
             try:
-                txt_path.write_text(", ".join(tags), "utf8")
+                txt_path.write_text(caption_text, "utf8")
             except Exception as e:
                 logger.error(e)
                 logger.warn(f"Warning: {txt_path} cannot be saved.")
             else:
                 saved_num += 1
+                self._load_signatures[data.imgpath] = caption_text
         logger.write(
             f"Backup text files: {backup_num}/{len(self.dataset)} under {self.dataset_dir}"
         )
         logger.write(
-            f"Saved text files: {saved_num}/{len(self.dataset)} under {self.dataset_dir}"
+            f"Saved text files: {saved_num}/{len(self.dataset)} under {self.dataset_dir} ({skipped_num} unchanged, skipped)"
         )
 
         if write_kohya_metadata:
@@ -986,19 +1101,26 @@ class DatasetTagEditor(Singleton):
         self.tag_tokens.clear()
         self.img_idx.clear()
         self.dataset_dir = ""
+        self._load_signatures.clear()
         for img in self.images:
             if isinstance(img, Image.Image):
                 img.close()
         self.images.clear()
 
     def construct_tag_infos(self):
-        self.tag_counts = {}
+        # [PERF] local-variable hot loop; tokenization results are cached
+        # inside clip_tokenizer, so repeated calls are now cheap
+        tag_counts = {}
+        tag_tokens = self.tag_tokens
+        tokenize = clip_tokenizer.tokenize
 
         for data in self.dataset.datas.values():
             for tag in data.tags:
-                if tag in self.tag_counts.keys():
-                    self.tag_counts[tag] += 1
+                if tag in tag_counts:
+                    tag_counts[tag] += 1
                 else:
-                    self.tag_counts[tag] = 1
-                if tag not in self.tag_tokens:
-                    self.tag_tokens[tag] = clip_tokenizer.tokenize(tag)
+                    tag_counts[tag] = 1
+                if tag not in tag_tokens:
+                    tag_tokens[tag] = tokenize(tag)
+
+        self.tag_counts = tag_counts

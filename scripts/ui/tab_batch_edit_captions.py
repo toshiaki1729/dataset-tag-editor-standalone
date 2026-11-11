@@ -1,7 +1,9 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Callable
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Callable
 import gradio as gr
 
+import settings
 from .ui_common import *
 from .uibase import UIBase
 from .block_tag_select import TagSelectUI
@@ -126,6 +128,36 @@ class BatchEditCaptionsUI(UIBase):
                 self.btn_truncate_by_token = gr.Button(
                     value="Truncate tags by token count", variant="primary"
                 )
+        with gr.Tab(label="Smart Dedup"):
+            with gr.Column(variant="panel"):
+                gr.HTML(
+                    "Remove <b>generic</b> tags when a more specific tag of the same "
+                    "kind is present in the same caption.<br>"
+                    "e.g. \"white thighhighs\" removes \"thighhighs\"; "
+                    "\"white panties\" removes \"panties\" and \"underwear\"; "
+                    "\"rose\" removes \"flowers\".<br><br>"
+                    "<b>Rules (offline)</b>: built-in implication table plus a "
+                    "\"&lt;color&gt; &lt;noun&gt;\" heuristic. Extend it with a custom "
+                    "JSON file (Settings → Smart Dedup custom rules JSON file).<br>"
+                    "<b>LLM API</b>: let a chat model decide. Configure the endpoint "
+                    "in Settings (OpenAI-compatible: llama.cpp / Ollama / vLLM / "
+                    "OpenAI, or Anthropic). Identical tag sets are cached, so each "
+                    "unique caption is sent only once."
+                )
+                self.rb_dedup_mode = gr.Radio(
+                    ["Rules (offline)", "LLM API"],
+                    value="Rules (offline)",
+                    label="Method",
+                    interactive=True,
+                )
+                self.tb_dedup_preview = gr.Textbox(
+                    label="Planned removals", interactive=False, lines=8
+                )
+                with gr.Row():
+                    self.btn_dedup_preview = gr.Button(value="Preview")
+                    self.btn_dedup_apply = gr.Button(
+                        value="Apply to filtered images", variant="primary"
+                    )
 
     def set_callbacks(
         self,
@@ -337,6 +369,66 @@ class BatchEditCaptionsUI(UIBase):
             fn=truncate_by_token_count,
             inputs=self.nb_token_count,
             outputs=o_update_filter_and_gallery,
+        )
+
+        def dedup_kwargs(mode: str) -> dict[str, Any]:
+            if mode == "LLM API":
+                return dict(
+                    mode="llm",
+                    llm_options=dict(
+                        api_type=settings.current.dedup_llm_api_type,
+                        base_url=settings.current.dedup_llm_base_url,
+                        model=settings.current.dedup_llm_model,
+                        api_key=settings.current.dedup_llm_api_key,
+                    ),
+                    rules_path=None,
+                )
+            return dict(
+                mode="rules",
+                llm_options=None,
+                rules_path=settings.current.dedup_rules_file or None,
+            )
+
+        def format_dedup_result(details: list, errors: list, limit: int = 100):
+            lines = []
+            if details:
+                lines.append(f"{len(details)} image(s) affected:")
+                for path, removals in details[:limit]:
+                    lines.append(f"{Path(path).name}: remove [{', '.join(removals)}]")
+                if len(details) > limit:
+                    lines.append(f"... and {len(details) - limit} more images")
+            else:
+                lines.append("No redundant tags found.")
+            if errors:
+                lines.append(f"WARNING: {len(errors)} error(s), first: {errors[0]}")
+            return "\n".join(lines)
+
+        def dedup_preview(mode: str):
+            details = dte_instance.smart_dedup_tags(
+                get_filters(), apply=False, **dedup_kwargs(mode)
+            )
+            return format_dedup_result(details, dte_instance.last_dedup_errors)
+
+        def dedup_apply(mode: str):
+            details = dte_instance.smart_dedup_tags(
+                get_filters(), apply=True, **dedup_kwargs(mode)
+            )
+            return [
+                format_dedup_result(details, dte_instance.last_dedup_errors)
+            ] + update_filter_and_gallery()
+
+        self.btn_dedup_preview.click(
+            fn=dedup_preview,
+            inputs=self.rb_dedup_mode,
+            outputs=self.tb_dedup_preview,
+        )
+        self.btn_dedup_apply.click(
+            fn=dedup_apply,
+            inputs=self.rb_dedup_mode,
+            outputs=[self.tb_dedup_preview] + o_update_filter_and_gallery,
+        )
+        self.btn_dedup_apply.click(
+            fn=None, js="() => gl_dataset_images_close()"
         )
 
     def get_common_tags(

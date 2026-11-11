@@ -136,7 +136,11 @@ class EditCaptionOfSelectedImageUI(UIBase):
             warn_change_not_saved: bool,
         ):
             self.prev_idx = self.current_idx
-            self.current_idx = select_data.index if select_data.selected else -1
+            # [PERF] gallery index is page-local; map it back to global
+            idx = select_data.index if select_data.selected else -1
+            if idx >= 0:
+                idx += dataset_gallery.page * dataset_gallery.page_size()
+            self.current_idx = idx
             img_paths = dte_instance.get_filtered_imgpaths(filters=get_filters())
             prev_tags_txt = ""
             if 0 <= self.prev_idx and self.prev_idx < len(img_paths):
@@ -314,7 +318,11 @@ class EditCaptionOfSelectedImageUI(UIBase):
                 )
 
             for img_path in img_paths:
-                dte_instance.set_tags_by_image_path(imgpath=img_path, tags=edited_tags)
+                dte_instance.set_tags_by_image_path(
+                    imgpath=img_path, tags=edited_tags, rebuild=False
+                )
+            # [PERF] rebuild tag stats once for the whole batch
+            dte_instance.construct_tag_infos()
             return update_filter_and_gallery()
 
         self.btn_apply_changes_all_images.click(

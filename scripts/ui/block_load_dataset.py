@@ -152,9 +152,12 @@ class LoadDatasetUI(UIBase):
                 kohya_json_path if use_kohya_metadata else None,
                 settings.current.max_resolution
             )
+            # [PERF] paginate the initial gallery view
+            dataset_gallery.reset_page()
             imgs = dte_instance.get_filtered_imgs(filters=[])
+            page_imgs, _, _ = dataset_gallery.apply_pagination(imgs)
             return (
-                [imgs, []]
+                [page_imgs, []]
                 + update_filter_and_gallery()
             )
 

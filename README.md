@@ -90,6 +90,9 @@ Note. "tag" means each blocks of caption separated by commas.
 - You can add Custom Tagger in `userscripts/taggers` (they have to be wrapped by a class derived from `scripts.tagger.Tagger`)
   - Some Aesthetic Score Predictors are implemented in there
 - Batch remove image and/or caption files
+- Smart tag deduplication: drop generic tags when a more specific one is present
+  (e.g. `white thighhighs` removes `thighhighs`). Works offline with a built-in
+  implication table, or via an OpenAI-compatible / Anthropic chat API.
 
 
 ## Usage
@@ -146,6 +149,33 @@ Please note that all batch editing will be applyed **only to displayed images (=
   The same as replacing. Just replace the tags with "blank".  
   Also you can use "Remove" tab in "Batch Edit Captions".  
   ![](pic/ss10.png)  
+
+#### I want to remove redundant generic tags automatically
+  Use the "Smart Dedup" tab in "Batch Edit Captions". When a caption contains a
+  specific tag, the generic tags it implies are removed, e.g.:
+  - `white thighhighs` → removes `thighhighs`
+  - `white panties` → removes `panties` and `underwear`
+  - `rose` → removes `flowers` / `flower`
+
+  Two methods are available:
+  - **Rules (offline)**: a built-in implication table plus a `<color> <noun>`
+    heuristic. No network needed. You can extend the table with a JSON file
+    (Settings → "Smart Dedup custom rules JSON file"):
+    ```json
+    {
+      "implications": {
+        "white thighhighs": ["thighhighs"],
+        "rose": ["flowers", "flower"]
+      }
+    }
+    ```
+  - **LLM API**: let a chat model decide. Set the API type (`openai` for any
+    OpenAI-compatible server such as llama.cpp / Ollama / vLLM / OpenAI, or
+    `anthropic`), base URL, model name and API key in Settings. Identical tag
+    sets are cached so each unique caption is sent only once.
+
+  Press **Preview** to see what would be removed, then **Apply to filtered
+  images**. Changes are not written to disk until "Save all changes".
 
 #### I want to add/replace/remove tags more flexibly  
   1. Go to "Batch Edit Captions" tab

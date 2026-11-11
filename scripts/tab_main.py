@@ -116,6 +116,8 @@ def get_filters():
 
 def update_gallery():
     imgs = ui.dte_instance.get_filtered_imgs(filters=get_filters())
+    # [PERF] paginate the gallery instead of rendering every image at once
+    page_imgs, page, total_pages = ui.dataset_gallery.apply_pagination(imgs)
     total_image_num = len(ui.dte_instance.dataset)
     displayed_image_num = len(imgs)
     ui.gallery_state.register_value(
@@ -130,9 +132,10 @@ def update_gallery():
         f"{len(ui.filter_by_selection.path_filter.paths)} images",
     )
     return [
-        imgs,
+        page_imgs,
         -1,
         ui.gallery_state.get_current_gallery_txt(),
+        f"Page {page + 1}/{total_pages} · {displayed_image_num} filtered images",
     ]
 
 
@@ -334,6 +337,7 @@ def on_ui_tabs():
             ui.dataset_gallery.gl_dataset_images,
             ui.edit_caption_of_selected_image.nb_hidden_image_index_save_or_not,
             ui.gallery_state.txt_gallery,
+            ui.dataset_gallery.txt_page_info,  # [PERF] pagination status
         ]
 
         o_update_filter_and_gallery = (
@@ -368,7 +372,7 @@ def on_ui_tabs():
             ui.batch_edit_captions,
             update_filter_and_gallery
         )
-        ui.dataset_gallery.set_callbacks(ui.gallery_state)
+        ui.dataset_gallery.set_callbacks(ui.gallery_state, update_gallery, o_update_gallery)
         ui.gallery_state.set_callbacks(ui.dataset_gallery)
         ui.filter_by_tags.set_callbacks(
             o_update_gallery,
