@@ -36,10 +36,33 @@ If you want to use DirectML, please install manually in venv  (install [pytorch-
 This script will install [ONNX runtime](https://onnxruntime.ai/) **automatically** in `venv` before using wd-taggers by SmilingWolf.
 
 ## Installation
-### Windows
-Just run `install.bat`  
 
-### Linux (or install manually on Windows)
+### Recommended: uv (isolated, no system pollution)
+[uv](https://docs.astral.sh/uv/) creates a private virtual environment (`.venv/`) and keeps
+**all** downloaded state — package cache, Python interpreter, model cache and temp files —
+inside this folder under `runtime/`. Nothing is installed into your system Python.
+
+1. Install uv once: <https://docs.astral.sh/uv/getting-started/installation/>
+2. Start the app (uv creates the environment and installs the pinned dependencies on first run):
+   - **Windows:** double-click `launch_uv.bat`
+   - **Linux / macOS:** `./webui_uv.sh`
+
+To install without launching, run `uv sync`. The pins in `pyproject.toml` / `uv.lock` are a
+known-good combination for Gradio 4.28.3.
+
+By default **CPU-only PyTorch** is installed (lightweight, works everywhere, no CUDA toolkit
+required). For NVIDIA GPU acceleration, after `uv sync` run:
+```sh
+uv pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+uv run --no-sync scripts/launch.py
+```
+(`--no-sync` keeps the CUDA build instead of restoring the locked CPU one.)
+
+### Alternative: pip / venv (legacy)
+#### Windows
+Just run `install.bat`
+
+#### Linux (or install manually on Windows)
 Run following commands on the root directory of this repo.
 ```sh
 python3 -m venv --system-site-packages venv
@@ -53,13 +76,14 @@ pip3 install -r requirements.txt
 You can see available command line args with `-h` or `--help` option.
 
 ### Windows
-Just run `launch_user.bat`
+Just run `launch_uv.bat` (uv) or `launch_user.bat` (pip/venv).
 
 ### Linux
 ```sh
 source ./venv/bin/activate
 python scripts/launch.py [arguments]
 ```
+Or with uv: `./webui_uv.sh [arguments]`
 
 ### Google Colab
 

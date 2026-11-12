@@ -2,6 +2,16 @@ import importlib.util
 import os
 import subprocess
 import sys
+from pathlib import Path
+
+# Keep downloaded models and temporary files inside the repository so the app
+# runs fully self-contained (no writes to the user's home directory / C: drive).
+# setdefault respects any value the user has already configured externally.
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+_RUNTIME_DIR = _REPO_ROOT / "runtime"
+os.environ.setdefault("HF_HOME", str(_RUNTIME_DIR / "hf_cache"))
+os.environ.setdefault("GRADIO_TEMP_DIR", str(_RUNTIME_DIR / "gradio_tmp"))
+os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
 
 import cmd_args, logger
 

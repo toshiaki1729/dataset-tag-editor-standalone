@@ -1,0 +1,56 @@
+[project]
+name = "dataset-tag-editor-standalone"
+version = "0.2.4"
+description = "Standalone web UI to edit captions and tags for image datasets (kohya-ss sd-scripts style)."
+readme = "README.md"
+# The pinned stack below (torch 2.15 / transformers 4.44) requires Python 3.11+.
+requires-python = ">=3.11,<3.13"
+
+# Direct dependencies. The exact pins below are a verified-compatible set for
+# Gradio 4.28.3 (newer transformers / huggingface-hub / tokenizers / starlette
+# break it). uv.lock records the full resolved graph for reproducible installs.
+dependencies = [
+    "gradio==4.28.3",
+    "transformers==4.44.2",
+    "huggingface-hub==0.25.2",
+    "torch==2.15.0",
+    "torchvision==0.29.2",
+    "timm==1.0.31",
+    "numpy==1.26.4",
+    "pillow==10.4.0",
+    "requests==2.34.2",
+    "tqdm==4.70.1",
+    "print-color==0.4.8",
+    # Used lazily by the WD tagger; declared here so it is pre-installed and the
+    # app never needs to pip-install anything at runtime.
+    "pandas>=2.2,<3",
+    "onnxruntime>=1.17,<2",
+]
+
+[tool.uv]
+package = false
+# Keep the uv package cache inside the repository (no writes to the global uv
+# cache, e.g. C:\Users\<user>\AppData\Local\uv). Relative to the repo root.
+cache-dir = "runtime/uv_cache"
+# Transitive pins required to keep the Gradio 4.28.3 web stack working.
+constraint-dependencies = [
+    "tokenizers==0.19.1",
+    "gradio-client==0.16.0",
+    "jinja2==3.1.4",
+    "fastapi==0.110.3",
+    "starlette==0.37.2",
+    "pydantic==2.14.3",
+    "uvicorn==0.54.0",
+    "safetensors==0.8.0",
+]
+
+# Default to CPU-only PyTorch: lightweight, works everywhere, no CUDA toolkit
+# needed. For GPU, see README (install CUDA torch into .venv, run with --no-sync).
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+torchvision = { index = "pytorch-cpu" }
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true

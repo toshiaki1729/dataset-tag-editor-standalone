@@ -2,6 +2,8 @@
 __pycache__/
 .vscode/
 venv/
+.venv/
+runtime/
 temp/
 models/
 .DS_Store
