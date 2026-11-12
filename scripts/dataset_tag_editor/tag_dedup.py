@@ -43,19 +43,33 @@ from pathlib import Path
 # Keys and values are normalized (lowercase, underscores -> spaces).
 BUILTIN_IMPLICATIONS: dict[str, list[str]] = {
     # --- underwear / legwear ---
-    "panties": ["underwear"],
-    "bra": ["underwear"],
+    "panties": ["underwear", "lingerie"],
+    "bra": ["underwear", "lingerie"],
     "lingerie": ["underwear"],
+    "garter belt": ["lingerie"],
     "thighhighs": ["legwear"],
     "pantyhose": ["legwear"],
     "stockings": ["legwear"],
-    "knee highs": ["legwear"],
+    "knee highs": ["legwear", "socks"],
+    "kneehighs": ["legwear", "socks"],
+    "ankle socks": ["socks"],
     # --- footwear ---
-    "sneakers": ["shoes"],
-    "high heels": ["shoes"],
-    "boots": ["footwear"],
+    "shoes": ["footwear"],
+    "sneakers": ["shoes", "footwear"],
+    "high heels": ["shoes", "footwear"],
+    "boots": ["shoes", "footwear"],
     "sandals": ["footwear"],
-    "loafers": ["shoes"],
+    "loafers": ["shoes", "footwear"],
+    "mary janes": ["shoes", "footwear"],
+    # --- jewelry / accessories ---
+    "earrings": ["jewelry"],
+    "necklace": ["jewelry"],
+    "tiara": ["jewelry"],
+    "crown": ["jewelry"],
+    "bracelet": ["jewelry"],
+    "ring": ["jewelry"],
+    # --- clothing ---
+    "blazer": ["jacket"],
     # --- flowers / plants ---
     "rose": ["flower", "flowers"],
     "tulip": ["flower", "flowers"],
@@ -210,7 +224,9 @@ SYSTEM_PROMPT = (
     "SAME list is strictly more specific than T and fully implies it, so "
     "removing T loses no information. Valid examples: remove 'thighhighs' "
     "when 'white thighhighs' is present; remove 'skirt' when 'pleated skirt' "
-    "or 'plaid skirt' is present; remove 'flowers' when 'rose' is present. "
+    "or 'plaid skirt' is present; remove 'flowers' when 'rose' is present; "
+    "remove 'jewelry' when 'earrings' is present; remove 'jacket' when "
+    "'blazer' is present; remove 'socks' when 'kneehighs' is present. "
     "Hard rules: (1) NEVER remove the most specific tag of a kind - keep "
     "'loafers', 'socks', 'jacket', 'elf', character names, etc. unless a "
     "strictly more specific tag of that SAME kind is also present and stays. "
@@ -222,7 +238,10 @@ SYSTEM_PROMPT = (
     "background' describe different things - keep them; '1girl' and 'solo' "
     "are different - keep both. (4) If no strictly-more-specific tag remains "
     "for T, KEEP T; when in doubt, keep. It is far better to remove nothing "
-    "than to remove a tag that is not truly redundant. "
+    "than to remove a tag that is not truly redundant. (5) When a generic "
+    "tag and its more specific form are both present ('jacket'+'blazer', "
+    "'jewelry'+'earrings', 'socks'+'kneehighs'), remove ONLY the generic and "
+    "keep the specific - never propose removing both. "
     'Reply with ONLY a JSON object: {"remove": ["tag", ...]} listing tags '
     "that appear verbatim in the input. Keep at least one tag. No explanations."
 )
@@ -346,20 +365,32 @@ def _validate_llm_removals(tags: list[str], proposed: list[str],
     """Safety net: accept an LLM-proposed removal only when a strictly more
     specific tag REMAINS in the caption. Prevents stripping the last tag of a
     kind (e.g. removing both 'loafers' and 'brown footwear', or 'socks' when
-    no more-specific sock is present)."""
+    no more-specific sock is present).
+
+    Conflict resolution: if the model proposes removing BOTH a generic and
+    its more specific form ('jacket' + 'blazer'), the specific one is kept and
+    only the generic is dropped. This is a greedy fixed point over the
+    directional subsumption relation, so the most specific tag of a kind can
+    never be removed."""
     if rules is None:
         rules = load_rules()
     implications = rules["implications"]
     norm = {t: normalize(t) for t in tags}
     proposed_norm = {normalize(str(p)) for p in proposed}
-    kept = [t for t in tags if norm[t] not in proposed_norm]
-    accepted: list[str] = []
-    for t in tags:
-        if norm[t] not in proposed_norm:
-            continue
-        if any(_subsumes(norm[s], norm[t], implications) for s in kept):
-            accepted.append(t)
-    return accepted
+    candidates = [t for t in tags if norm[t] in proposed_norm]
+    removed: set[str] = set()
+    changed = True
+    while changed:
+        changed = False
+        for t in candidates:
+            nt = norm[t]
+            if nt in removed:
+                continue
+            if any(norm[s] != nt and norm[s] not in removed
+                   and _subsumes(norm[s], nt, implications) for s in tags):
+                removed.add(nt)
+                changed = True
+    return [t for t in candidates if norm[t] in removed]
 
 
 def compute_removals_llm(tags: list[str], *, api_type: str, base_url: str,
