@@ -239,7 +239,13 @@ def _chat_openai(base_url: str, model: str, api_key: str, user_prompt: str,
                 {"role": "user", "content": user_prompt},
             ],
             "temperature": 0.2,
-            "max_tokens": 2048,
+            "max_tokens": 1024,
+            # Dedup only needs a short JSON answer, not chain-of-thought.
+            # Hybrid reasoning models (Qwen3 etc.) otherwise burn ~98% of the
+            # tokens and tens of seconds per caption "thinking", which makes a
+            # whole-dataset dedup look frozen. Servers/models without a
+            # thinking toggle simply ignore this kwarg.
+            "chat_template_kwargs": {"enable_thinking": False},
         },
         timeout=timeout,
     )
@@ -264,7 +270,7 @@ def _chat_anthropic(base_url: str, model: str, api_key: str, user_prompt: str,
         },
         json={
             "model": model,
-            "max_tokens": 2048,
+            "max_tokens": 1024,
             "system": SYSTEM_PROMPT,
             "messages": [{"role": "user", "content": user_prompt}],
         },
@@ -305,7 +311,7 @@ def _parse_removals(text: str) -> list[str]:
 
 def compute_removals_llm(tags: list[str], *, api_type: str, base_url: str,
                          model: str, api_key: str = "",
-                         timeout: float = 120.0) -> list[str]:
+                         timeout: float = 60.0) -> list[str]:
     """Ask an LLM which tags are redundant. Returns original tag strings."""
     if not base_url or not model:
         raise ValueError("LLM dedup requires base URL and model (see Settings)")

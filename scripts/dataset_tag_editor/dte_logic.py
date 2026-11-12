@@ -534,6 +534,8 @@ class DatasetTagEditor(Singleton):
         llm_options: Optional[dict] = None,
         rules_path: Optional[str] = None,
         apply: bool = True,
+        progress=None,
+        should_cancel=None,
     ):
         """Remove generic tags subsumed by more specific ones in each caption.
 
@@ -550,7 +552,13 @@ class DatasetTagEditor(Singleton):
         self.last_dedup_errors: list[str] = []
         changed = 0
         removed_total = 0
-        for path in img_paths:
+        total = len(img_paths)
+        for i, path in enumerate(img_paths):
+            if should_cancel is not None and should_cancel():
+                logger.write("Smart dedup cancelled by user.")
+                break
+            if progress is not None:
+                progress((i + 1) / max(total, 1), desc=f"Smart dedup {i + 1}/{total}")
             tags = self.dataset.get_data_tags(path)
             key = tuple(sorted(tag_dedup.normalize(t) for t in tags))
             if key not in cache:

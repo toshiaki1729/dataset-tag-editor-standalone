@@ -152,6 +152,20 @@ class LoadDatasetUI(UIBase):
                 kohya_json_path if use_kohya_metadata else None,
                 settings.current.max_resolution
             )
+            # [FIX] Allow gradio to serve images from the folder just loaded.
+            # The /file= route only serves paths under blocks.allowed_paths; a
+            # dataset outside the app dir / configured whitelist otherwise shows
+            # up as blank boxes (HTTP 403). Append the loaded dir dynamically.
+            try:
+                import interface as _iface
+                from pathlib import Path as _Path
+                _blocks = _iface.interface
+                if _blocks is not None:
+                    _dir = str(_Path(dir).absolute())
+                    if _dir not in _blocks.allowed_paths:
+                        _blocks.allowed_paths.append(_dir)
+            except Exception:
+                pass
             # [PERF] paginate the initial gallery view
             dataset_gallery.reset_page()
             imgs = dte_instance.get_filtered_imgs(filters=[])

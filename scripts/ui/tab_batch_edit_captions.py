@@ -2,6 +2,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable
 import gradio as gr
+import threading
 
 import settings
 from .ui_common import *
@@ -13,6 +14,10 @@ if TYPE_CHECKING:
 
 SortBy = dte_instance.SortBy
 SortOrder = dte_instance.SortOrder
+
+# Cooperative cancellation flag for Smart Dedup, set by the Cancel button and
+# checked between captions so a long LLM run can be stopped promptly.
+_dedup_cancel = threading.Event()
 
 
 class BatchEditCaptionsUI(UIBase):
@@ -158,6 +163,7 @@ class BatchEditCaptionsUI(UIBase):
                     self.btn_dedup_apply = gr.Button(
                         value="Apply to filtered images", variant="primary"
                     )
+                    self.btn_dedup_cancel = gr.Button(value="Cancel")
 
     def set_callbacks(
         self,
@@ -403,15 +409,19 @@ class BatchEditCaptionsUI(UIBase):
                 lines.append(f"WARNING: {len(errors)} error(s), first: {errors[0]}")
             return "\n".join(lines)
 
-        def dedup_preview(mode: str):
+        def dedup_preview(mode: str, progress=gr.Progress()):
+            _dedup_cancel.clear()
             details = dte_instance.smart_dedup_tags(
-                get_filters(), apply=False, **dedup_kwargs(mode)
+                get_filters(), apply=False, progress=progress,
+                should_cancel=_dedup_cancel.is_set, **dedup_kwargs(mode)
             )
             return format_dedup_result(details, dte_instance.last_dedup_errors)
 
-        def dedup_apply(mode: str):
+        def dedup_apply(mode: str, progress=gr.Progress()):
+            _dedup_cancel.clear()
             details = dte_instance.smart_dedup_tags(
-                get_filters(), apply=True, **dedup_kwargs(mode)
+                get_filters(), apply=True, progress=progress,
+                should_cancel=_dedup_cancel.is_set, **dedup_kwargs(mode)
             )
             return [
                 format_dedup_result(details, dte_instance.last_dedup_errors)
@@ -430,6 +440,7 @@ class BatchEditCaptionsUI(UIBase):
         self.btn_dedup_apply.click(
             fn=None, js="() => gl_dataset_images_close()"
         )
+        self.btn_dedup_cancel.click(fn=lambda: _dedup_cancel.set())
 
     def get_common_tags(
         self,
