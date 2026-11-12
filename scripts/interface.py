@@ -13,6 +13,36 @@ import gradio as gr
 import gradio.routes
 import gradio.utils
 
+
+# ----------------------------------------------------------------
+# Gradio 4.28.3 pins gradio_client 0.16.0, whose JSON-schema -> Python-type
+# helper crashes on boolean schemas ("additionalProperties: true", e.g. the
+# `meta` dict inside FileData used by Gallery/Image/File components). That
+# makes GET /info raise "TypeError: argument of type 'bool' is not iterable"
+# for every such endpoint. Treat boolean schemas as Any so API-info generation
+# succeeds. Idempotent and a safe no-op on gradio_client versions that already
+# handle boolean schemas.
+def _patch_gradio_client_bool_schema():
+    try:
+        from gradio_client import utils as _gc_utils
+
+        _orig = _gc_utils._json_schema_to_python_type
+        if getattr(_orig, "_bool_schema_safe", False):
+            return
+
+        def _bool_safe(schema, defs):
+            if isinstance(schema, bool):
+                return "Any"
+            return _orig(schema, defs)
+
+        _bool_safe._bool_schema_safe = True
+        _gc_utils._json_schema_to_python_type = _bool_safe
+    except Exception:
+        pass
+
+
+_patch_gradio_client_bool_schema()
+
 from dte_instance import dte_instance
 
 import tab_main, tab_settings, cmd_args, utilities, logger, launch, settings
