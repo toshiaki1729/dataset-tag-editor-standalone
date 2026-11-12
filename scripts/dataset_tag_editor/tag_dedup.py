@@ -205,17 +205,26 @@ def compute_removals_rules(tags: list[str], rules: dict | None = None) -> list[s
 # --------------------------------------------------------------------------
 
 SYSTEM_PROMPT = (
-    "You deduplicate booru-style image caption tags. Given a list of tags "
-    "describing ONE image, find generic tags that are fully implied by a "
-    "more specific tag in the SAME list (e.g. 'thighhighs' is implied by "
-    "'white thighhighs'; 'underwear' and 'panties' are implied by "
-    "'white panties'; 'flowers' is implied by 'rose'). "
-    "Reply with ONLY a JSON object: {\"remove\": [\"tag\", ...]}. "
-    "Rules: only list tags that appear verbatim in the input list; "
-    "never remove the more specific tag; never remove tags that are merely "
-    "related but not implied (e.g. keep 'blue eyes' when 'blue hair' is "
-    "present, keep '1girl' when 'solo' is present); "
-    "when unsure, keep the tag; keep at least one tag; no explanations."
+    "You clean up booru-style image caption tags by removing ONLY tags that "
+    "are fully redundant. A tag T is redundant ONLY IF another tag S in the "
+    "SAME list is strictly more specific than T and fully implies it, so "
+    "removing T loses no information. Valid examples: remove 'thighhighs' "
+    "when 'white thighhighs' is present; remove 'skirt' when 'pleated skirt' "
+    "or 'plaid skirt' is present; remove 'flowers' when 'rose' is present. "
+    "Hard rules: (1) NEVER remove the most specific tag of a kind - keep "
+    "'loafers', 'socks', 'jacket', 'elf', character names, etc. unless a "
+    "strictly more specific tag of that SAME kind is also present and stays. "
+    "(2) A color/attribute qualifier is information: 'brown footwear' is NOT "
+    "implied by 'loafers' (loafers need not be brown), so keep 'brown "
+    "footwear'; only drop a qualified tag if a remaining tag carries the "
+    "same qualifier AND is more specific. (3) Distinct concepts are not "
+    "duplicates: 'white background', 'simple background' and 'transparent "
+    "background' describe different things - keep them; '1girl' and 'solo' "
+    "are different - keep both. (4) If no strictly-more-specific tag remains "
+    "for T, KEEP T; when in doubt, keep. It is far better to remove nothing "
+    "than to remove a tag that is not truly redundant. "
+    'Reply with ONLY a JSON object: {"remove": ["tag", ...]} listing tags '
+    "that appear verbatim in the input. Keep at least one tag. No explanations."
 )
 
 
@@ -309,9 +318,54 @@ def _parse_removals(text: str) -> list[str]:
     return [str(t) for t in removals if isinstance(t, (str, int, float))]
 
 
+def _is_suffix(generic: list, specific: list) -> bool:
+    """True if generic is a strictly shorter trailing head of specific
+    (skirt < pleated skirt; school uniform < white school uniform),
+    plural-aware. A modifier-only tag (plaid in plaid skirt) is NOT subsumed,
+    so attribute/pattern tags are kept."""
+    if not generic or len(generic) >= len(specific):
+        return False
+    tail = specific[-len(generic):]
+    return all(g == s or g in _variants(s) for g, s in zip(generic, tail))
+
+
+def _subsumes(specific: str, generic: str, implications: dict) -> bool:
+    """True if normalized `specific` fully implies normalized `generic`."""
+    if specific == generic:
+        return False
+    if _is_suffix(generic.split(), specific.split()):
+        return True
+    for g in implications.get(specific, ()):
+        if g == generic or g in _variants(generic) or generic in _variants(g):
+            return True
+    return False
+
+
+def _validate_llm_removals(tags: list[str], proposed: list[str],
+                           rules: dict | None = None) -> list[str]:
+    """Safety net: accept an LLM-proposed removal only when a strictly more
+    specific tag REMAINS in the caption. Prevents stripping the last tag of a
+    kind (e.g. removing both 'loafers' and 'brown footwear', or 'socks' when
+    no more-specific sock is present)."""
+    if rules is None:
+        rules = load_rules()
+    implications = rules["implications"]
+    norm = {t: normalize(t) for t in tags}
+    proposed_norm = {normalize(str(p)) for p in proposed}
+    kept = [t for t in tags if norm[t] not in proposed_norm]
+    accepted: list[str] = []
+    for t in tags:
+        if norm[t] not in proposed_norm:
+            continue
+        if any(_subsumes(norm[s], norm[t], implications) for s in kept):
+            accepted.append(t)
+    return accepted
+
+
 def compute_removals_llm(tags: list[str], *, api_type: str, base_url: str,
                          model: str, api_key: str = "",
-                         timeout: float = 60.0) -> list[str]:
+                         timeout: float = 60.0,
+                         rules: dict | None = None) -> list[str]:
     """Ask an LLM which tags are redundant. Returns original tag strings."""
     if not base_url or not model:
         raise ValueError("LLM dedup requires base URL and model (see Settings)")
@@ -323,12 +377,15 @@ def compute_removals_llm(tags: list[str], *, api_type: str, base_url: str,
         reply = _chat_openai(base_url, model, api_key, user_prompt, timeout)
 
     proposed = _parse_removals(reply)
+    # Safety net: only drop a tag when a strictly more specific tag remains,
+    # so an over-eager model can never strip the last shoe/sock/etc. tag.
+    accepted = _validate_llm_removals(tags, proposed, rules)
     by_norm: dict[str, list[str]] = {}
     for t in tags:
         by_norm.setdefault(normalize(t), []).append(t)
 
     remove: set[str] = set()
-    for p in proposed:
+    for p in accepted:
         for orig in by_norm.get(normalize(str(p)), ()):
             remove.add(orig)
     if len(remove) >= len(set(normalize(t) for t in tags)):
@@ -342,5 +399,5 @@ def compute_removals(tags: list[str], mode: str = "rules",
     if not tags:
         return []
     if mode == "llm":
-        return compute_removals_llm(tags, **(llm_options or {}))
+        return compute_removals_llm(tags, rules=rules, **(llm_options or {}))
     return compute_removals_rules(tags, rules)
