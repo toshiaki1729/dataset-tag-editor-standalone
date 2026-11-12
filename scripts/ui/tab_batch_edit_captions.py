@@ -37,7 +37,9 @@ class BatchEditCaptionsUI(UIBase):
                 )
                 self.show_only_selected_tags = cfg_batch_edit.show_only_selected
                 self.tb_common_tags = gr.Textbox(label="Common Tags", interactive=False)
-                self.tb_edit_tags = gr.Textbox(label="Edit Tags", interactive=True)
+                self.tb_edit_tags = gr.Textbox(
+                    label="Edit Tags", interactive=True, elem_id="dte_edit_tags"
+                )
                 self.cb_prepend_tags = gr.Checkbox(
                     value=cfg_batch_edit.prepend, label="Prepend additional tags"
                 )

@@ -291,6 +291,24 @@ def main():
             allowed_paths=allowed_paths
         )
 
+        # Booru tag autocompletion data endpoints (a1111-sd-webui-tagcomplete
+        # compatible). The frontend JS fetches these lazily; handlers read the
+        # live settings so changes apply without a restart.
+        from dataset_tag_editor import tag_autocomplete as _tac
+        from fastapi.responses import JSONResponse, PlainTextResponse
+        app.add_api_route(
+            "/dte/tagcomplete/config",
+            lambda: JSONResponse(_tac.get_config()),
+            methods=["GET"],
+        )
+        app.add_api_route(
+            "/dte/tagcomplete/tags.csv",
+            lambda: PlainTextResponse(
+                _tac.get_tags_csv(), media_type="text/csv; charset=utf-8"
+            ),
+            methods=["GET"],
+        )
+
         # Disable a very open middleware as Stable Diffusion web UI does
         app.user_middleware = [
             x for x in app.user_middleware if x.cls.__name__ != "CORSMiddleware"

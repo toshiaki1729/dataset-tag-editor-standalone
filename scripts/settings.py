@@ -28,6 +28,13 @@ class Settings(NamedTuple):
     dedup_llm_model: str = ""
     dedup_llm_api_key: str = ""
     dedup_rules_file: str = ""
+    # Booru tag autocompletion (a1111-sd-webui-tagcomplete compatible)
+    tagcomplete_enabled: bool = True
+    tagcomplete_tag_file: str = ""
+    tagcomplete_max_results: int = 20
+    tagcomplete_search_alias: bool = True
+    tagcomplete_replace_underscores: bool = True
+    tagcomplete_append_comma: bool = True
     batch_size_vit:int = 4
     batch_size_vit_large:int = 4
     batch_size_convnext:int = 4
@@ -63,6 +70,12 @@ DESCRIPTIONS = {
     "dedup_llm_model": "Smart Dedup LLM model name, e.g. gpt-4o-mini or a local model id",
     "dedup_llm_api_key": "Smart Dedup LLM API key (leave empty for local servers without auth)",
     "dedup_rules_file": "Smart Dedup custom rules JSON file (optional; extends the built-in implication table)",
+    "tagcomplete_enabled": "Enable booru tag autocompletion while editing captions (a1111-sd-webui-tagcomplete compatible)",
+    "tagcomplete_tag_file": "Tag autocomplete CSV file (tagcomplete format). Empty = bundled tags/danbooru.csv; point to your tagcomplete tags folder for e621/custom files",
+    "tagcomplete_max_results": "Tag autocomplete: maximum number of suggestions shown",
+    "tagcomplete_search_alias": "Tag autocomplete: also search tag aliases",
+    "tagcomplete_replace_underscores": "Tag autocomplete: insert tags with spaces instead of underscores",
+    "tagcomplete_append_comma": "Tag autocomplete: append a comma and space after inserting a tag",
     "batch_size_vit": "Inference batch size for ViT taggers",
     "batch_size_vit_large": "Inference batch size for ViT large taggers",
     "batch_size_convnext": "Inference batch size for ConvNeXt taggers",

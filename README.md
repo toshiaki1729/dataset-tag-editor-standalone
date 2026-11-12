@@ -117,6 +117,10 @@ Note. "tag" means each blocks of caption separated by commas.
 - Smart tag deduplication: drop generic tags when a more specific one is present
   (e.g. `white thighhighs` removes `thighhighs`). Works offline with a built-in
   implication table, or via an OpenAI-compatible / Anthropic chat API.
+- Booru tag autocompletion while editing captions (a1111-sd-webui-tagcomplete
+  compatible): type a few letters and pick from Danbooru tags with aliases,
+  category colours and post counts. Enabled by default; uses the bundled
+  `tags/danbooru.csv` or any tagcomplete-format CSV you point it to.
 
 
 ## Usage
@@ -197,6 +201,28 @@ Please note that all batch editing will be applyed **only to displayed images (=
     OpenAI-compatible server such as llama.cpp / Ollama / vLLM / OpenAI, or
     `anthropic`), base URL, model name and API key in Settings. Identical tag
     sets are cached so each unique caption is sent only once.
+
+#### I want tag autocompletion while typing
+  Autocompletion is **on by default** in the caption textboxes (Caption of
+  Selected Image, Interrogate Result, Edit Caption, and the batch Edit Tags box).
+  Start typing a tag and a dropdown of matching Danbooru tags appears:
+  - suggestions are coloured by category (general / artist / copyright /
+    character / meta) and show the post count;
+  - aliases are searched too (e.g. typing `high_res` offers `highres`);
+  - use ↑/↓ to choose, Enter or Tab to insert, Esc to dismiss;
+  - the inserted tag uses spaces instead of underscores and is followed by `, `.
+
+  Configure it in **Settings**:
+  - **Enable booru tag autocompletion...** — turn the feature on/off.
+  - **Tag autocomplete CSV file** — leave empty for the bundled `tags/danbooru.csv`,
+    or point to any [tagcomplete](https://github.com/DominikDoom/a1111-sd-webui-tagcomplete)-format
+    CSV (e.g. `e621.csv` or a custom/translation file from an existing tagcomplete
+    installation). Relative paths are resolved against the repo root.
+  - **maximum number of suggestions**, **also search tag aliases**,
+    **insert tags with spaces**, **append a comma and space** — tune the behaviour.
+
+  The tag data is served locally; no network access is needed. The bundled
+  `danbooru.csv` is from the MIT-licensed tagcomplete project (see `tags/README.md`).
 
   Press **Preview** to see what would be removed, then **Apply to filtered
   images**. Changes are not written to disk until "Save all changes".
